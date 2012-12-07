@@ -1,9 +1,34 @@
+#include "ELRenderer.h"
+
 #include <stdlib.h>
 #include <windows.h>
 
 
 HINSTANCE               g_hInst = NULL;
 HWND                    g_hWnd = NULL; 
+
+
+ELRenderer *renderer;
+/////////////////////////////////////////////////////////////////////////////////////
+
+
+void TestStart()
+{
+	renderer = new ELRenderer;
+	renderer->Setup(g_hWnd);
+}
+
+void TestEnd()
+{
+	renderer->Shutdown();
+	delete renderer;
+}
+
+void TestUpdate()
+{
+
+}
+/////////////////////////////////////////////////////////////////////////////////////
 
 LRESULT CALLBACK WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
@@ -62,6 +87,8 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdL
 	if( FAILED( InitWindow( hInstance, nCmdShow ) ) )
 		return 0;
 
+	TestStart();
+
 	// Main message loop
 	MSG msg = {0};
 	while( WM_QUIT != msg.message )
@@ -73,8 +100,10 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdL
 		}
 
 		//Do render here
-
+		TestUpdate();
 	}
+
+	TestEnd();
 
 	return ( int )msg.wParam;
 }
