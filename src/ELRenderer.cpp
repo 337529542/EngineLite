@@ -6,16 +6,23 @@
 
 ELRenderer::ELRenderer()
 {
-
+	
 }
 
 ELRenderer::~ELRenderer()
 {
-
+	
 }
 
 void ELRenderer::Setup( HWND hWnd )
 {
+
+//setup variables
+	//clear m_VertexBuffers
+	for(int i=0; i<ELRenderer_Max_Vertex_Buffers; i++)
+		m_VertexBuffers[i] = 0;
+
+//setup system
 	HRESULT hr = S_OK;
 	RECT rc;
 	GetClientRect( hWnd, &rc );
@@ -169,7 +176,22 @@ void ELRenderer::Setup( HWND hWnd )
 
 void ELRenderer::Shutdown()
 {
+	//Delete m_VertexBuffers
+	for(int i=0; i<ELRenderer_Max_Vertex_Buffers; i++)
+		if(m_VertexBuffers[i] != 0)
+			DeleteVertexBuffer(i);
 
+	//Delete m_GeometryShaderVarsBuffer
+	m_GeometryShaderVarsBuffer->Release();
+
+	//Delete Geometry VShader
+	m_GeometryVShader->Release();
+
+	//Delete Geometry PShader
+	m_GeometryPShader->Release();
+
+	//Delete m_GeometryLayout
+	m_GeometryLayout->Release();
 }
 
 void ELRenderer::LoadGeometryVShader()
@@ -237,5 +259,57 @@ void ELRenderer::LoadGeometryPShader()
 		{
 			throw "CreatePixelShader";
 		}
+	}
+}
+
+int ELRenderer::CreateVertexBuffer( float *data, int numFloats )
+{
+	int EmptySlot = -1;
+
+	//find a empty slot
+	for(int i=0; i<ELRenderer_Max_Vertex_Buffers; i++)
+	{
+		if(m_VertexBuffers[i] == 0)
+		{
+			EmptySlot = i;
+			break;
+		}
+	}
+	
+	if(EmptySlot == -1)
+		return -1;
+
+
+	D3D11_BUFFER_DESC bd;
+	bd.Usage = D3D11_USAGE_DEFAULT;
+	bd.ByteWidth = sizeof( float ) * numFloats;
+	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	bd.CPUAccessFlags = 0;
+	bd.MiscFlags = 0;
+	bd.StructureByteStride = 0;
+
+	D3D11_SUBRESOURCE_DATA InitData;
+	InitData.pSysMem = data;
+	InitData.SysMemPitch = 0;
+	InitData.SysMemSlicePitch = 0;
+
+
+
+	HRESULT hr = m_pd3dDevice->CreateBuffer(&bd, &InitData, &m_VertexBuffers[EmptySlot]);
+	if( FAILED(hr) )
+	{
+		m_VertexBuffers[EmptySlot] = 0;
+		return -1;
+	}
+
+	return EmptySlot;
+}
+
+void ELRenderer::DeleteVertexBuffer( int handle )
+{
+	if(m_VertexBuffers[handle] != 0)
+	{
+		m_VertexBuffers[handle]->Release();
+		m_VertexBuffers[handle] = 0;
 	}
 }

@@ -11,11 +11,23 @@ HWND                    g_hWnd = NULL;
 ELRenderer *renderer;
 /////////////////////////////////////////////////////////////////////////////////////
 
+float testVBuffer[]={1.0f, 1.0f, 1.0f,
+					2.0f, 2.0f, 2.0f,
+					3.0f, 3.0f, 3.0f,
+					};
+int VBufferHandles[567];
 
 void TestStart()
 {
 	renderer = new ELRenderer;
 	renderer->Setup(g_hWnd);
+
+	for(int i=0; i<567; i++)
+	{
+		VBufferHandles[i] = renderer->CreateVertexBuffer(testVBuffer, 9);
+		if(VBufferHandles[i] == -1)
+			throw "foo";
+	}
 }
 
 void TestEnd()

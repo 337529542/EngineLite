@@ -9,6 +9,8 @@
 #define ELRenderer_GeometryPShader_FilePath "Media\\GeometryPixelShader.hlsl"
 #define ELRenderer_GeometryPShader_Func "GeometryPixelShader"
 
+#define ELRenderer_Max_Vertex_Buffers 1000
+
 class ELRenderer_ShaderVars_Geometry
 {
 public:
@@ -26,8 +28,11 @@ public:
 	void Setup(HWND hWnd);
 	void Shutdown();
 
-	void CreateMesh();//vertex buffer, index buffer, normal buffer, texcoord buffer...
-	void DeleteMesh();
+	//void CreateMesh();//vertex buffer, index buffer...
+	//void DeleteMesh();
+	int CreateVertexBuffer(float *data, int numFloats);//returns -1 if failed
+	void DeleteVertexBuffer(int handle);
+	
 
 	void BeginGeometry();
 
@@ -63,4 +68,7 @@ private:
 	ID3D11VertexShader *m_GeometryVShader;
 	ID3D11PixelShader *m_GeometryPShader;
 	ID3D11InputLayout *m_GeometryLayout;
+
+	//Vertex Buffers
+	ID3D11Buffer *m_VertexBuffers[ELRenderer_Max_Vertex_Buffers];
 };
