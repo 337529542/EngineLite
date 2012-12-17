@@ -22,6 +22,10 @@ void ELRenderer::Setup( HWND hWnd )
 	for(int i=0; i<ELRenderer_Max_Vertex_Buffers; i++)
 		m_VertexBuffers[i] = 0;
 
+	//clear m_IndexBuffers
+	for(int i=0; i<ELRenderer_Max_Index_Buffers; i++)
+		m_IndexBuffers[i] = 0;
+
 //setup system
 	HRESULT hr = S_OK;
 	RECT rc;
@@ -181,6 +185,11 @@ void ELRenderer::Shutdown()
 		if(m_VertexBuffers[i] != 0)
 			DeleteVertexBuffer(i);
 
+	//Delete m_IndexBuffers
+	for(int i=0; i<ELRenderer_Max_Index_Buffers; i++)
+		if(m_IndexBuffers[i] != 0)
+			DeleteIndexBuffer(i);
+
 	//Delete m_GeometryShaderVarsBuffer
 	m_GeometryShaderVarsBuffer->Release();
 
@@ -311,5 +320,53 @@ void ELRenderer::DeleteVertexBuffer( int handle )
 	{
 		m_VertexBuffers[handle]->Release();
 		m_VertexBuffers[handle] = 0;
+	}
+}
+
+int ELRenderer::CreateIndexBuffer( unsigned short *data, int numElements )
+{
+	int EmptySlot = -1;
+
+	//find a empty slot
+	for(int i=0; i<ELRenderer_Max_Index_Buffers; i++)
+	{
+		if(m_IndexBuffers[i] == 0)
+		{
+			EmptySlot = i;
+			break;
+		}
+	}
+
+	if(EmptySlot == -1)
+		return -1;
+
+
+	D3D11_BUFFER_DESC indexBufferDesc;
+	indexBufferDesc.ByteWidth = sizeof(unsigned short) * numElements;
+	indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	indexBufferDesc.CPUAccessFlags = 0;
+	indexBufferDesc.MiscFlags = 0;
+	indexBufferDesc.StructureByteStride = 0;
+
+	D3D11_SUBRESOURCE_DATA indexBufferData;
+	indexBufferData.pSysMem = data;
+	indexBufferData.SysMemPitch = 0;
+	indexBufferData.SysMemSlicePitch = 0;
+
+	HRESULT hr = m_pd3dDevice->CreateBuffer(&indexBufferDesc, &indexBufferData, &m_IndexBuffers[EmptySlot]);
+	if( FAILED(hr) )
+	{
+		m_IndexBuffers[EmptySlot] = 0;
+		return -1;
+	}
+}
+
+void ELRenderer::DeleteIndexBuffer( int handle )
+{
+	if(m_IndexBuffers[handle] != 0)
+	{
+		m_IndexBuffers[handle]->Release();
+		m_IndexBuffers[handle] = 0;
 	}
 }

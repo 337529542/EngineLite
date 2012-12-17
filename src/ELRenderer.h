@@ -10,6 +10,7 @@
 #define ELRenderer_GeometryPShader_Func "GeometryPixelShader"
 
 #define ELRenderer_Max_Vertex_Buffers 1000
+#define ELRenderer_Max_Index_Buffers 1000
 
 class ELRenderer_ShaderVars_Geometry
 {
@@ -28,10 +29,11 @@ public:
 	void Setup(HWND hWnd);
 	void Shutdown();
 
-	//void CreateMesh();//vertex buffer, index buffer...
-	//void DeleteMesh();
 	int CreateVertexBuffer(float *data, int numFloats);//returns -1 if failed
 	void DeleteVertexBuffer(int handle);
+
+	int CreateIndexBuffer(unsigned short *data, int numElements);//returns -1 if failed
+	void DeleteIndexBuffer(int handle);
 	
 
 	void BeginGeometry();
@@ -71,4 +73,7 @@ private:
 
 	//Vertex Buffers
 	ID3D11Buffer *m_VertexBuffers[ELRenderer_Max_Vertex_Buffers];
+
+	//Index Buffers
+	ID3D11Buffer *m_IndexBuffers[ELRenderer_Max_Index_Buffers];
 };

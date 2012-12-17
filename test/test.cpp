@@ -17,15 +17,27 @@ float testVBuffer[]={1.0f, 1.0f, 1.0f,
 					};
 int VBufferHandles[567];
 
+unsigned short testIBuffer[]={1, 2, 3, 4, 5, 6, 7, 8, 9};
+int IBufferHandles[789];
+
 void TestStart()
 {
 	renderer = new ELRenderer;
 	renderer->Setup(g_hWnd);
 
+	//test VBuffers
 	for(int i=0; i<567; i++)
 	{
 		VBufferHandles[i] = renderer->CreateVertexBuffer(testVBuffer, 9);
 		if(VBufferHandles[i] == -1)
+			throw "foo";
+	}
+
+	//testIBuffers
+	for(int i=0; i<789; i++)
+	{
+		IBufferHandles[i] = renderer->CreateIndexBuffer(testIBuffer, 9);
+		if(IBufferHandles[i] == -1)
 			throw "foo";
 	}
 }

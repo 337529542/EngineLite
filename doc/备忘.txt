@@ -1,3 +1,10 @@
 1.需要连接的库
 	D3D11.lib D3DX11.lib D3DX10.lib
 
+
+2.接下来要做的
+	setConstant
+	GeoDraw(Index Vertex)
+	void BeginGeometryDebug();
+	void EndGeometryDebug();
+	...
