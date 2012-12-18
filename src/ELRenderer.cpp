@@ -370,3 +370,34 @@ void ELRenderer::DeleteIndexBuffer( int handle )
 		m_IndexBuffers[handle] = 0;
 	}
 }
+
+int ELRenderer::SetGeometryConstant( const ELRenderer_ShaderVars_Geometry *constant )
+{
+	ELRenderer_ShaderVars_Geometry *shaderVarsMapPtr;
+
+	D3D11_MAPPED_SUBRESOURCE GeometryShaderMappedResource;
+	HRESULT hr = m_pd3dDeviceContext->Map(m_GeometryShaderVarsBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &GeometryShaderMappedResource); 
+	if(FAILED(hr)) 
+	{ 
+		return -1;
+	}
+
+	shaderVarsMapPtr = (ELRenderer_ShaderVars_Geometry *)GeometryShaderMappedResource.pData;
+
+	for(int i=0; i<4; i++)
+		for(int j=0; j<4; j++)
+			shaderVarsMapPtr->viewMatrix[i][j] = constant->viewMatrix[j][i];
+
+	for(int i=0; i<4; i++)
+		for(int j=0; j<4; j++)
+			shaderVarsMapPtr->worldMatrix[i][j] =constant->worldMatrix[j][i];
+
+	for(int i=0; i<4; i++)
+		for(int j=0; j<4; j++)
+			shaderVarsMapPtr->perspectiveMatrix[i][j] = constant->perspectiveMatrix[j][i];
+
+	m_pd3dDeviceContext->VSSetConstantBuffers(0, 1, &m_GeometryShaderVarsBuffer);
+	m_pd3dDeviceContext->Unmap(m_GeometryShaderVarsBuffer, 0);
+
+	return 0;
+}

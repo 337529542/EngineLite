@@ -38,7 +38,7 @@ public:
 
 	void BeginGeometry();
 
-		void SetConstant();
+		int SetGeometryConstant(const ELRenderer_ShaderVars_Geometry *constant);//returns -1 if failed
 		void DrawMesh();
 
 	void EndGeometryAndBeginLighting();

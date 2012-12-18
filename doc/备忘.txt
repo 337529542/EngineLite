@@ -3,7 +3,6 @@
 
 
 2.接下来要做的
-	setConstant
 	GeoDraw(Index Vertex)
 	void BeginGeometryDebug();
 	void EndGeometryDebug();

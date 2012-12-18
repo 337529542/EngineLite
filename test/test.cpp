@@ -20,6 +20,8 @@ int VBufferHandles[567];
 unsigned short testIBuffer[]={1, 2, 3, 4, 5, 6, 7, 8, 9};
 int IBufferHandles[789];
 
+ELRenderer_ShaderVars_Geometry GeoShaderVars;
+
 void TestStart()
 {
 	renderer = new ELRenderer;
@@ -40,6 +42,7 @@ void TestStart()
 		if(IBufferHandles[i] == -1)
 			throw "foo";
 	}
+
 }
 
 void TestEnd()
@@ -50,7 +53,9 @@ void TestEnd()
 
 void TestUpdate()
 {
-
+	//test SetGeoShaderVars
+	if(renderer->SetGeometryConstant(&GeoShaderVars) == -1)
+		throw "foo";
 }
 /////////////////////////////////////////////////////////////////////////////////////
 
