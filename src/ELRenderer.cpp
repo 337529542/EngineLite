@@ -210,7 +210,11 @@ void ELRenderer::LoadGeometryVShader()
 	//compile shader
 	ID3D10Blob *pshader;
 	ID3D10Blob *pErrmsg;
-	hr = D3DX11CompileFromFile(ELRenderer_GeometryVShader_FilePath, NULL, NULL, ELRenderer_GeometryVShader_Func, "vs_4_0", 0, 0, NULL, &pshader, &pErrmsg, NULL);
+
+
+	//for Pix debug
+	UINT shaderFlags = D3D10_SHADER_DEBUG | D3D10_SHADER_SKIP_OPTIMIZATION;
+	hr = D3DX11CompileFromFile(ELRenderer_GeometryVShader_FilePath, NULL, NULL, ELRenderer_GeometryVShader_Func, "vs_4_0", shaderFlags, 0, NULL, &pshader, &pErrmsg, NULL);
 	if( FAILED(hr) )
 	{
 		throw "D3DX11CompileFromFile";
@@ -255,7 +259,10 @@ void ELRenderer::LoadGeometryPShader()
 	//compile shader
 	ID3D10Blob *pshader;
 	ID3D10Blob *pErrmsg;
-	hr = D3DX11CompileFromFile(ELRenderer_GeometryPShader_FilePath, NULL, NULL, ELRenderer_GeometryPShader_Func, "ps_4_0", 0, 0, NULL, &pshader, &pErrmsg, NULL);
+
+	//for Pix debug
+	UINT shaderFlags = D3D10_SHADER_DEBUG | D3D10_SHADER_SKIP_OPTIMIZATION;
+	hr = D3DX11CompileFromFile(ELRenderer_GeometryPShader_FilePath, NULL, NULL, ELRenderer_GeometryPShader_Func, "ps_4_0", shaderFlags, 0, NULL, &pshader, &pErrmsg, NULL);
 	if( FAILED(hr) )
 	{
 		throw "D3DX11CompileFromFile";
@@ -400,4 +407,19 @@ int ELRenderer::SetGeometryConstant( const ELRenderer_ShaderVars_Geometry *const
 	m_pd3dDeviceContext->Unmap(m_GeometryShaderVarsBuffer, 0);
 
 	return 0;
+}
+
+void ELRenderer::DrawMesh()
+{
+
+}
+
+void ELRenderer::BeginGeometryDebug()
+{
+
+}
+
+void ELRenderer::EndGeometryDebug()
+{
+
 }
