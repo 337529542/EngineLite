@@ -3,6 +3,35 @@
 #include <stdlib.h>
 #include <windows.h>
 
+#ifdef _DEBUG
+void Trace(LPCTSTR lpszFmt, ...)
+{
+	TCHAR szText[2000];
+	va_list marker;
+	va_start(marker, lpszFmt);
+	wvsprintf(szText, lpszFmt, marker);
+	va_end(marker);
+	// 根据情况可采用下面任一种(或多种)输出形式
+	 OutputDebugString(szText);
+	// cout<<szText<<endl;
+	// printf(TEXT("%s\r\n"), szText);
+	// WroteFile(hLogFile, ...
+	// 其他
+
+
+}
+#define TRACE(fmt, sz) Trace(fmt, sz)
+#else
+#define TRACE(fmt, sz)
+#endif
+
+
+//for debug view
+int fps = 0;
+int fps_c = 0;
+DWORD TickCount = 0;
+//////////////////
+
 
 HINSTANCE               g_hInst = NULL;
 HWND                    g_hWnd = NULL; 
@@ -53,9 +82,29 @@ void TestEnd()
 
 void TestUpdate()
 {
+	//debug show fps
+	if(TickCount == 0)
+	{
+		TickCount = GetTickCount();
+	}
+	fps_c ++;
+	DWORD nowt = GetTickCount();
+	if(nowt >= TickCount + 1000)
+	{
+		TickCount = nowt;
+		fps = fps_c;
+		fps_c = 0;
+		TRACE("fps:%d\n", fps);
+	}
+	//
+
+	renderer->BeginGeometryDebug();
+
 	//test SetGeoShaderVars
-	if(renderer->SetGeometryConstant(&GeoShaderVars) == -1)
-		throw "foo";
+	//if(renderer->SetGeometryConstant(&GeoShaderVars) == -1)
+	//	throw "foo";
+
+	renderer->EndGeometryDebug();
 }
 /////////////////////////////////////////////////////////////////////////////////////
 

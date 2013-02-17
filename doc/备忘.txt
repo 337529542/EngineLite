@@ -4,6 +4,8 @@
 
 2.接下来要做的
 	GeoDraw(Index Vertex)
-	void BeginGeometryDebug();
-	void EndGeometryDebug();
+	void BeginGeometryDebug();--已完成
+	void EndGeometryDebug();--已完成
 	...
+
+3.debug版有一个自己实现的trace 要定义_DEBUG才可以看到输出信息

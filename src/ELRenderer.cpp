@@ -49,12 +49,13 @@ void ELRenderer::Setup( HWND hWnd )
 	sd.SampleDesc.Quality = 0;
 	sd.Windowed = TRUE;
 
-	D3D_FEATURE_LEVEL FeatureLevels = D3D_FEATURE_LEVEL_11_0;
+	//D3D_FEATURE_LEVEL FeatureLevels = D3D_FEATURE_LEVEL_11_0;
+	D3D_FEATURE_LEVEL FeatureLevels = D3D_FEATURE_LEVEL_10_0;
 
 	D3D_FEATURE_LEVEL FeatureLevel;
 
 	if( FAILED (hr = D3D11CreateDeviceAndSwapChain( NULL, 
-		D3D_DRIVER_TYPE_REFERENCE,
+		D3D_DRIVER_TYPE_HARDWARE,
 		NULL, 
 		D3D11_CREATE_DEVICE_DEBUG,
 		&FeatureLevels, 
@@ -71,7 +72,7 @@ void ELRenderer::Setup( HWND hWnd )
 
 	// Create a render target view
 	ID3D11Texture2D* pBackBuffer;
-	hr = m_pSwapChain->GetBuffer( 0, __uuidof( ID3D11Texture2D ), ( LPVOID* )&pBackBuffer );
+	hr = m_pSwapChain->GetBuffer( 0, __uuidof( pBackBuffer ), reinterpret_cast<void**>(&pBackBuffer) );
 	if( FAILED( hr ) )
 	{
 		throw "GetBuffer";
@@ -367,6 +368,8 @@ int ELRenderer::CreateIndexBuffer( unsigned short *data, int numElements )
 		m_IndexBuffers[EmptySlot] = 0;
 		return -1;
 	}
+
+	return 0;
 }
 
 void ELRenderer::DeleteIndexBuffer( int handle )
@@ -416,10 +419,13 @@ void ELRenderer::DrawMesh()
 
 void ELRenderer::BeginGeometryDebug()
 {
-
+	m_pd3dDeviceContext->OMSetRenderTargets( 1, &m_pRenderTargetView_Screen, pDSV );
+	float ClearColor[4] = { 0.0f, 0.05f, 0.5f, 1.0f }; //red,green,blue,alpha
+	m_pd3dDeviceContext->ClearRenderTargetView( m_pRenderTargetView_Screen, ClearColor );
+	m_pd3dDeviceContext->ClearDepthStencilView(pDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
 }
 
 void ELRenderer::EndGeometryDebug()
 {
-
+	m_pSwapChain->Present( 0, 0 );
 }
