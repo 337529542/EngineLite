@@ -423,6 +423,12 @@ void ELRenderer::BeginGeometryDebug()
 	float ClearColor[4] = { 0.0f, 0.05f, 0.5f, 1.0f }; //red,green,blue,alpha
 	m_pd3dDeviceContext->ClearRenderTargetView( m_pRenderTargetView_Screen, ClearColor );
 	m_pd3dDeviceContext->ClearDepthStencilView(pDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
+
+	m_pd3dDeviceContext->VSSetShader(m_GeometryVShader, NULL, 0);
+	m_pd3dDeviceContext->IASetInputLayout(m_GeometryLayout);
+
+	m_pd3dDeviceContext->PSSetShader(m_GeometryPShader, NULL, 0);
+
 }
 
 void ELRenderer::EndGeometryDebug()
