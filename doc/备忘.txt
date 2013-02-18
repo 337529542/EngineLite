@@ -2,10 +2,15 @@
 	D3D11.lib D3DX11.lib D3DX10.lib
 
 
-2.接下来要做的
+2.debug版有一个自己实现的trace 要定义_DEBUG才可以看到输出信息
+
+
+/////////////////////////////////////////////////////////////
+接下来要做的
 	GeoDraw(Index Vertex)
 	void BeginGeometryDebug();--已完成
 	void EndGeometryDebug();--已完成
 	...
 
-3.debug版有一个自己实现的trace 要定义_DEBUG才可以看到输出信息
+GeoDraw，首先画三角，然后画复杂模型，都实现后，画延迟着色的第一阶段的东西(画之前修改BeginGeometryDebug和EndGeometryDebug)
+都搞定后，开始实现光线阶段
