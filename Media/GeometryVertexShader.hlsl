@@ -21,7 +21,12 @@ struct PixelShaderInput
 PixelShaderInput GeometryVertexShader(VertexShaderInput input)
 {
     PixelShaderInput vertexShaderOutput;
-	vertexShaderOutput.pos = float4(input.pos.x, input.pos.y, 0.5f, 1.0f);
+
+    vertexShaderOutput.pos = mul(float4(input.pos, 1.0f), svar.worldMatrix);
+    vertexShaderOutput.pos = mul(vertexShaderOutput.pos, svar.viewMatrix);
+    vertexShaderOutput.pos = mul(vertexShaderOutput.pos, svar.perspectiveMatrix);
+
+    vertexShaderOutput.norm = mul(float4(input.norm, 0.0f), svar.worldMatrix);
 
     return vertexShaderOutput;
 }

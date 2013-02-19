@@ -4,6 +4,7 @@
 #include <windows.h>
 
 #include "ELCube.h"
+#include "ELMath.h"
 
 #ifdef _DEBUG
 void Trace(LPCTSTR lpszFmt, ...)
@@ -104,10 +105,32 @@ void TestUpdate()
 		TRACE("fps:%d\n", fps);
 	}
 	//
+	ELMatrix4x4 ViewMatrix;
+	ELMatrix4x4 PerspectiveMatrix;
+
+	PerspectiveMatrix.makePerspectiveMatrix(D3DX_PI * 0.7f, 800.0f/600.0f, 1.0f, 100.0f);
+	ViewMatrix.resetMatrix();
+	ViewMatrix.setTrans(ELVector3(0, 0, 1.1));
+	cube1->GetWorldMatrix()->resetMatrix();
+
+	static float yaw = 0;
+	cube1->GetWorldMatrix()->setRoll(yaw);
+	yaw += 0.001;
+
+	for(int i=0; i<4; i++)
+		for(int j=0; j<4; j++)
+			GeoShaderVars.viewMatrix[i][j] = ViewMatrix.m[i][j];
+
+	for(int i=0; i<4; i++)
+		for(int j=0; j<4; j++)
+			GeoShaderVars.worldMatrix[i][j] = cube1->GetWorldMatrix()->m[i][j];
+
+	for(int i=0; i<4; i++)
+		for(int j=0; j<4; j++)
+			GeoShaderVars.perspectiveMatrix[i][j] = PerspectiveMatrix.m[i][j];
 
 	renderer->BeginGeometryDebug();
 
-	//test SetGeoShaderVars
 	if(renderer->SetGeometryConstant(&GeoShaderVars) == -1)
 		throw "foo";
 
