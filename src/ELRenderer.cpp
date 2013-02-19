@@ -34,6 +34,14 @@ void ELRenderer::Setup( HWND hWnd )
 	UINT height = rc.bottom - rc.top;
 	UINT createDeviceFlags = 0;
 
+	//setup Viewport
+	m_vp.Width = width;
+	m_vp.Height = height;
+	m_vp.MinDepth = 0.0f;
+	m_vp.MaxDepth = 1.0f;
+	m_vp.TopLeftX = 0;
+	m_vp.TopLeftY = 0;
+
 	//Create device and swap chain
 	DXGI_SWAP_CHAIN_DESC sd;
 	ZeroMemory( &sd, sizeof( sd ) );
@@ -369,7 +377,7 @@ int ELRenderer::CreateIndexBuffer( unsigned short *data, int numElements )
 		return -1;
 	}
 
-	return 0;
+	return EmptySlot;
 }
 
 void ELRenderer::DeleteIndexBuffer( int handle )
@@ -412,9 +420,17 @@ int ELRenderer::SetGeometryConstant( const ELRenderer_ShaderVars_Geometry *const
 	return 0;
 }
 
-void ELRenderer::DrawMesh()
+void ELRenderer::DrawMesh(const int IBuffer, const int VBuffer, int NumTriangles)
 {
+	UINT stride = sizeof(float) * 6;
+	UINT offset = 0;
 
+	m_pd3dDeviceContext->IASetVertexBuffers( 0, 1, &m_VertexBuffers[VBuffer], &stride, &offset );
+	m_pd3dDeviceContext->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
+
+	m_pd3dDeviceContext->IASetIndexBuffer(m_IndexBuffers[IBuffer], DXGI_FORMAT_R16_UINT, 0);
+
+	m_pd3dDeviceContext->DrawIndexed(NumTriangles*3, 0, 0);
 }
 
 void ELRenderer::BeginGeometryDebug()
@@ -428,6 +444,8 @@ void ELRenderer::BeginGeometryDebug()
 	m_pd3dDeviceContext->IASetInputLayout(m_GeometryLayout);
 
 	m_pd3dDeviceContext->PSSetShader(m_GeometryPShader, NULL, 0);
+
+	m_pd3dDeviceContext->RSSetViewports( 1, &m_vp );
 
 }
 

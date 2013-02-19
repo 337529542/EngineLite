@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <windows.h>
 
+#include "ELCube.h"
+
 #ifdef _DEBUG
 void Trace(LPCTSTR lpszFmt, ...)
 {
@@ -51,6 +53,8 @@ int IBufferHandles[789];
 
 ELRenderer_ShaderVars_Geometry GeoShaderVars;
 
+ELCube *cube1;
+
 void TestStart()
 {
 	renderer = new ELRenderer;
@@ -72,10 +76,13 @@ void TestStart()
 			throw "foo";
 	}
 
+	//add a cube
+	cube1 = new ELCube(renderer);
 }
 
 void TestEnd()
 {
+	delete cube1;
 	renderer->Shutdown();
 	delete renderer;
 }
@@ -101,8 +108,10 @@ void TestUpdate()
 	renderer->BeginGeometryDebug();
 
 	//test SetGeoShaderVars
-	//if(renderer->SetGeometryConstant(&GeoShaderVars) == -1)
-	//	throw "foo";
+	if(renderer->SetGeometryConstant(&GeoShaderVars) == -1)
+		throw "foo";
+
+	cube1->DrawMesh();
 
 	renderer->EndGeometryDebug();
 }

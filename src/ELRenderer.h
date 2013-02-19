@@ -39,7 +39,7 @@ public:
 	void BeginGeometry();
 
 		int SetGeometryConstant(const ELRenderer_ShaderVars_Geometry *constant);//returns -1 if failed
-		void DrawMesh();
+		void DrawMesh(const int IBuffer, const int VBuffer, int NumTriangles);
 
 	void EndGeometryAndBeginLighting();
 
@@ -64,6 +64,7 @@ private:
 	//Screen
 	IDXGISwapChain*         m_pSwapChain;
 	ID3D11RenderTargetView* m_pRenderTargetView_Screen;
+	D3D11_VIEWPORT m_vp;
 
 	//Geometry
 	ID3D11Buffer *m_GeometryShaderVarsBuffer;
