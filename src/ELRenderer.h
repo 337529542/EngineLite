@@ -77,4 +77,7 @@ private:
 
 	//Index Buffers
 	ID3D11Buffer *m_IndexBuffers[ELRenderer_Max_Index_Buffers];
+
+	//debug
+	ID3D11Resource *m_pTexture;
 };
