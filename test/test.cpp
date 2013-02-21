@@ -118,9 +118,9 @@ void TestUpdate()
 	ELMatrix4x4 ViewMatrix;
 	ELMatrix4x4 PerspectiveMatrix;
 
-	PerspectiveMatrix.makePerspectiveMatrix(D3DX_PI * 0.7f, 800.0f/600.0f, 1.0f, 100.0f);
+	PerspectiveMatrix.makePerspectiveMatrix(D3DX_PI * 0.6f, 800.0f/600.0f, 0.1f, 100.0f);
 	ViewMatrix.resetMatrix();
-	ViewMatrix.setTrans(ELVector3(0, 0, 1.1));
+	ViewMatrix.setTrans(ELVector3(0, 0, 1));
 	cube1->GetWorldMatrix()->resetMatrix();
 
 	static float yaw = 0;
@@ -143,6 +143,8 @@ void TestUpdate()
 
 	if(renderer->SetGeometryConstant(&GeoShaderVars) == -1)
 		throw "foo";
+
+	renderer->SetGeometryDiffuseTexture2D(tex2D[0]);
 
 	cube1->DrawMesh();
 

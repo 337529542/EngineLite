@@ -3,6 +3,29 @@
 #include <D3DX11async.h>
 #include <d3d10shader.h>
 
+#ifdef _DEBUG
+void TraceC(LPCTSTR lpszFmt, ...)
+{
+	TCHAR szText[2000];
+	va_list marker;
+	va_start(marker, lpszFmt);
+	wvsprintf(szText, lpszFmt, marker);
+	va_end(marker);
+	// 根据情况可采用下面任一种(或多种)输出形式
+	OutputDebugString(szText);
+	// cout<<szText<<endl;
+	// printf(TEXT("%s\r\n"), szText);
+	// WroteFile(hLogFile, ...
+	// 其他
+
+
+}
+#define TRACE(fmt, sz) TraceC(fmt, sz)
+#else
+#define TRACE(fmt, sz)
+#endif
+
+
 
 ELRenderer::ELRenderer()
 {
@@ -191,6 +214,23 @@ void ELRenderer::Setup( HWND hWnd )
 
 	//Load Geometry PShader
 	LoadGeometryPShader();
+
+	//Create Sampler
+	D3D11_SAMPLER_DESC samplerDesc;
+	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR; 
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP; 
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP; 
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP; 
+	samplerDesc.MipLODBias = 0.0f; 
+	samplerDesc.MaxAnisotropy = 1; 
+	samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS; 
+	samplerDesc.BorderColor[0] = 0; 
+	samplerDesc.BorderColor[1] = 0; 
+	samplerDesc.BorderColor[2] = 0; 
+	samplerDesc.BorderColor[3] = 0; 
+	samplerDesc.MinLOD = 0; 
+	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+	m_pd3dDevice->CreateSamplerState(&samplerDesc, &m_GeometrySamplerState);
 }
 
 void ELRenderer::Shutdown()
@@ -221,6 +261,9 @@ void ELRenderer::Shutdown()
 
 	//Delete m_GeometryLayout
 	m_GeometryLayout->Release();
+
+	//Delete SamplerState
+	m_GeometrySamplerState->Release();
 }
 
 void ELRenderer::LoadGeometryVShader()
@@ -253,7 +296,8 @@ void ELRenderer::LoadGeometryVShader()
 			const D3D11_INPUT_ELEMENT_DESC basicVertexLayoutDesc[] =
 			{
 				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 			};
 
 			hr = m_pd3dDevice->CreateInputLayout(
@@ -286,6 +330,7 @@ void ELRenderer::LoadGeometryPShader()
 	if( FAILED(hr) )
 	{
 		throw "D3DX11CompileFromFile";
+		//TRACE("%s", pErrmsg->GetBufferPointer());
 	}
 	else
 	{
@@ -433,7 +478,7 @@ int ELRenderer::SetGeometryConstant( const ELRenderer_ShaderVars_Geometry *const
 
 void ELRenderer::DrawMesh(const int IBuffer, const int VBuffer, int NumTriangles)
 {
-	UINT stride = sizeof(float) * 6;
+	UINT stride = sizeof(float) * 8;
 	UINT offset = 0;
 
 	m_pd3dDeviceContext->IASetVertexBuffers( 0, 1, &m_VertexBuffers[VBuffer], &stride, &offset );
@@ -459,6 +504,8 @@ void ELRenderer::BeginGeometryDebug()
 	m_pd3dDeviceContext->PSSetShader(m_GeometryPShader, NULL, 0);
 
 	m_pd3dDeviceContext->RSSetViewports( 1, &m_vp );
+
+	m_pd3dDeviceContext->PSSetSamplers(0, 1, &m_GeometrySamplerState);
 
 }
 
@@ -559,4 +606,9 @@ void ELRenderer::DeleteTexture2D(int handle)
 
 	m_pTexture2Ds[handle] = 0;
 	m_pTex2DView[handle] = 0;
+}
+
+void ELRenderer::SetGeometryDiffuseTexture2D( int handle )
+{
+	m_pd3dDeviceContext->PSSetShaderResources(0, 1, &m_pTex2DView[handle]);
 }

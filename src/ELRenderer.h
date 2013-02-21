@@ -43,6 +43,7 @@ public:
 	void BeginGeometry();
 
 		int SetGeometryConstant(const ELRenderer_ShaderVars_Geometry *constant);//returns -1 if failed
+		void SetGeometryDiffuseTexture2D(int handle);
 		void DrawMesh(const int IBuffer, const int VBuffer, int NumTriangles);
 
 	void EndGeometryAndBeginLighting();
@@ -75,6 +76,7 @@ private:
 	ID3D11VertexShader *m_GeometryVShader;
 	ID3D11PixelShader *m_GeometryPShader;
 	ID3D11InputLayout *m_GeometryLayout;
+	ID3D11SamplerState *m_GeometrySamplerState;
 
 	//Vertex Buffers
 	ID3D11Buffer *m_VertexBuffers[ELRenderer_Max_Vertex_Buffers];
