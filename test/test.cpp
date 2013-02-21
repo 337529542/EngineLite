@@ -56,6 +56,8 @@ ELRenderer_ShaderVars_Geometry GeoShaderVars;
 
 ELCube *cube1;
 
+int tex2D[100];
+
 void TestStart()
 {
 	renderer = new ELRenderer;
@@ -75,6 +77,14 @@ void TestStart()
 		IBufferHandles[i] = renderer->CreateIndexBuffer(testIBuffer, 9);
 		if(IBufferHandles[i] == -1)
 			throw "foo";
+	}
+
+	//test load texture
+	for(int i=0; i<50; i++)
+	{
+		tex2D[i] = renderer->CreateTexture2D("Media\\test.bmp");
+		if(tex2D[i] == -1)
+			TRACE("%s", "create tex failed\n");
 	}
 
 	//add a cube

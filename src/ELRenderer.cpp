@@ -26,6 +26,13 @@ void ELRenderer::Setup( HWND hWnd )
 	for(int i=0; i<ELRenderer_Max_Index_Buffers; i++)
 		m_IndexBuffers[i] = 0;
 
+	//clear texture 2d 
+	for(int i=0; i<ELRenderer_Max_Texture2D; i++)
+	{
+		m_pTexture2Ds[i] = 0;
+		m_pTex2DView[i] = 0;
+	}
+
 //setup system
 	HRESULT hr = S_OK;
 	RECT rc;
@@ -184,65 +191,6 @@ void ELRenderer::Setup( HWND hWnd )
 
 	//Load Geometry PShader
 	LoadGeometryPShader();
-
-	//for debug create a texture
-	D3DX11_IMAGE_LOAD_INFO loadInfo;
-	ZeroMemory( &loadInfo, sizeof(D3DX11_IMAGE_LOAD_INFO) );
-	loadInfo.Width = D3DX11_DEFAULT;
-	loadInfo.Height = D3DX11_DEFAULT;
-	loadInfo.Depth = D3DX11_DEFAULT;
-	loadInfo.FirstMipLevel = D3DX11_DEFAULT;
-	loadInfo.MipLevels = D3DX11_DEFAULT;
-	loadInfo.Usage = (D3D11_USAGE) D3DX11_DEFAULT;
-	loadInfo.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-	loadInfo.CpuAccessFlags = D3DX11_DEFAULT;
-	loadInfo.MiscFlags = D3DX11_DEFAULT;
-	loadInfo.Format = DXGI_FORMAT_FROM_FILE;
-	loadInfo.Filter = D3DX11_DEFAULT;
-	loadInfo.MipFilter = D3DX11_DEFAULT;
-	loadInfo.pSrcInfo = NULL;
-
-	m_pTexture = NULL;
-	hr = D3DX11CreateTextureFromFile(m_pd3dDevice, "Media\\test.bmp", &loadInfo, NULL, &m_pTexture, NULL);
-	if(FAILED(hr)) 
-	{
-		if(hr == D3D11_ERROR_FILE_NOT_FOUND)
-			throw "D3DX11CreateTextureFromFile";
-		else if(hr == D3D11_ERROR_TOO_MANY_UNIQUE_STATE_OBJECTS)
-			throw "D3DX11CreateTextureFromFile";
-		else if(hr == D3D11_ERROR_DEFERRED_CONTEXT_MAP_WITHOUT_INITIAL_DISCARD)
-			throw "D3DX11CreateTextureFromFile";
-		else if(hr == D3D11_ERROR_TOO_MANY_UNIQUE_VIEW_OBJECTS)
-			throw "D3DX11CreateTextureFromFile";
-		else if(hr == D3DERR_INVALIDCALL)
-			throw "D3DX11CreateTextureFromFile";
-		else if(hr == D3DERR_WASSTILLDRAWING)
-			throw "D3DX11CreateTextureFromFile";
-		else if(hr == E_FAIL)
-			throw "D3DX11CreateTextureFromFile";
-		else if(hr == E_INVALIDARG)
-			throw "D3DX11CreateTextureFromFile";
-		else if(hr == E_OUTOFMEMORY)
-			throw "D3DX11CreateTextureFromFile";
-		else if(hr == S_FALSE)
-			throw "D3DX11CreateTextureFromFile";
-		else if(hr == S_OK)
-			throw "D3DX11CreateTextureFromFile";
-	}
-
-	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
-	D3D11_TEXTURE2D_DESC desc;
-	ID3D11Texture2D *pTexture2D = (ID3D11Texture2D*)m_pTexture;
-	pTexture2D->GetDesc( &desc );
-
-	srvDesc.Format = desc.Format;
-	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Texture2D.MipLevels = desc.MipLevels;
-	srvDesc.Texture2D.MostDetailedMip = desc.MipLevels -1;
-
-	ID3D11ShaderResourceView *pSRView = NULL;
-	m_pd3dDevice->CreateShaderResourceView( m_pTexture, &srvDesc, &pSRView );
-
 }
 
 void ELRenderer::Shutdown()
@@ -256,6 +204,11 @@ void ELRenderer::Shutdown()
 	for(int i=0; i<ELRenderer_Max_Index_Buffers; i++)
 		if(m_IndexBuffers[i] != 0)
 			DeleteIndexBuffer(i);
+
+	//Delete Texture2D
+	for(int i=0; i<ELRenderer_Max_Texture2D; i++)
+		if(m_pTexture2Ds[i] != 0)
+			DeleteTexture2D(i);
 
 	//Delete m_GeometryShaderVarsBuffer
 	m_GeometryShaderVarsBuffer->Release();
@@ -488,6 +441,8 @@ void ELRenderer::DrawMesh(const int IBuffer, const int VBuffer, int NumTriangles
 
 	m_pd3dDeviceContext->IASetIndexBuffer(m_IndexBuffers[IBuffer], DXGI_FORMAT_R16_UINT, 0);
 
+	//m_pd3dDeviceContext->PSSetShaderResources(0, 1, )
+
 	m_pd3dDeviceContext->DrawIndexed(NumTriangles*3, 0, 0);
 }
 
@@ -510,4 +465,98 @@ void ELRenderer::BeginGeometryDebug()
 void ELRenderer::EndGeometryDebug()
 {
 	m_pSwapChain->Present( 0, 0 );
+}
+
+int ELRenderer::CreateTexture2D( char* filepath )
+{
+	int resindex = -1;
+
+	for(int i=0; i< ELRenderer_Max_Texture2D; i++)
+	{
+		if(m_pTexture2Ds[i] == 0)
+		{
+			resindex = i;
+			break;
+		}
+	}
+
+	if(resindex == -1)
+		return -1;
+
+	D3DX11_IMAGE_LOAD_INFO loadInfo;
+	ZeroMemory( &loadInfo, sizeof(D3DX11_IMAGE_LOAD_INFO) );
+	loadInfo.Width = D3DX11_DEFAULT;
+	loadInfo.Height = D3DX11_DEFAULT;
+	loadInfo.Depth = D3DX11_DEFAULT;
+	loadInfo.FirstMipLevel = D3DX11_DEFAULT;
+	loadInfo.MipLevels = D3DX11_DEFAULT;
+	loadInfo.Usage = (D3D11_USAGE) D3DX11_DEFAULT;
+	loadInfo.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	loadInfo.CpuAccessFlags = D3DX11_DEFAULT;
+	loadInfo.MiscFlags = D3DX11_DEFAULT;
+	loadInfo.Format = DXGI_FORMAT_FROM_FILE;
+	loadInfo.Filter = D3DX11_DEFAULT;
+	loadInfo.MipFilter = D3DX11_DEFAULT;
+	loadInfo.pSrcInfo = NULL;
+
+	HRESULT hr = D3DX11CreateTextureFromFile(m_pd3dDevice, filepath, &loadInfo, NULL, &m_pTexture2Ds[resindex], NULL);
+	if(FAILED(hr)) 
+	{
+		if(hr == D3D11_ERROR_FILE_NOT_FOUND)
+			throw "D3DX11CreateTextureFromFile";
+		else if(hr == D3D11_ERROR_TOO_MANY_UNIQUE_STATE_OBJECTS)
+			throw "D3DX11CreateTextureFromFile";
+		else if(hr == D3D11_ERROR_DEFERRED_CONTEXT_MAP_WITHOUT_INITIAL_DISCARD)
+			throw "D3DX11CreateTextureFromFile";
+		else if(hr == D3D11_ERROR_TOO_MANY_UNIQUE_VIEW_OBJECTS)
+			throw "D3DX11CreateTextureFromFile";
+		else if(hr == D3DERR_INVALIDCALL)
+			throw "D3DX11CreateTextureFromFile";
+		else if(hr == D3DERR_WASSTILLDRAWING)
+			throw "D3DX11CreateTextureFromFile";
+		else if(hr == E_FAIL)
+			throw "D3DX11CreateTextureFromFile";
+		else if(hr == E_INVALIDARG)
+			throw "D3DX11CreateTextureFromFile";
+		else if(hr == E_OUTOFMEMORY)
+			throw "D3DX11CreateTextureFromFile";
+		else if(hr == S_FALSE)
+			throw "D3DX11CreateTextureFromFile";
+		else if(hr == S_OK)
+			throw "D3DX11CreateTextureFromFile";
+
+		m_pTexture2Ds[resindex] = 0;
+		return -1;
+	}
+
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+	D3D11_TEXTURE2D_DESC desc;
+	ID3D11Texture2D *pTexture2D = (ID3D11Texture2D*)m_pTexture2Ds[resindex];
+	pTexture2D->GetDesc( &desc );
+
+	srvDesc.Format = desc.Format;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = desc.MipLevels;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+
+	ID3D11ShaderResourceView *pSRView = NULL;
+	hr = m_pd3dDevice->CreateShaderResourceView( m_pTexture2Ds[resindex], &srvDesc, &m_pTex2DView[resindex] );
+	if(FAILED(hr)) 
+	{
+		throw "CreateShaderResourceView";
+		m_pTexture2Ds[resindex]->Release();
+		m_pTexture2Ds[resindex] = 0;
+		m_pTex2DView[resindex] = 0;
+	}
+
+	return resindex;
+}
+
+void ELRenderer::DeleteTexture2D(int handle)
+{
+	m_pTex2DView[handle]->Release();
+	m_pTexture2Ds[handle]->Release();
+
+	m_pTexture2Ds[handle] = 0;
+	m_pTex2DView[handle] = 0;
 }

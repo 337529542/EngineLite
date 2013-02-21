@@ -11,6 +11,7 @@
 
 #define ELRenderer_Max_Vertex_Buffers 1000
 #define ELRenderer_Max_Index_Buffers 1000
+#define ELRenderer_Max_Texture2D 1000
 
 class ELRenderer_ShaderVars_Geometry
 {
@@ -34,6 +35,9 @@ public:
 
 	int CreateIndexBuffer(unsigned short *data, int numElements);//returns -1 if failed
 	void DeleteIndexBuffer(int handle);
+
+	int CreateTexture2D(char* filepath);//returns -1 if failed
+	void DeleteTexture2D(int handle);
 	
 
 	void BeginGeometry();
@@ -78,6 +82,7 @@ private:
 	//Index Buffers
 	ID3D11Buffer *m_IndexBuffers[ELRenderer_Max_Index_Buffers];
 
-	//debug
-	ID3D11Resource *m_pTexture;
+	//Texture2Ds
+	ID3D11Resource *m_pTexture2Ds[ELRenderer_Max_Texture2D];
+	ID3D11ShaderResourceView *m_pTex2DView[ELRenderer_Max_Texture2D];
 };
