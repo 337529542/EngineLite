@@ -59,12 +59,17 @@ public:
 private:
 	void LoadGeometryVShader();
 	void LoadGeometryPShader();
+	void CreateMRT();
+	void ReleaseMRT();
 
 private:
 	
 	ID3D11Device*           m_pd3dDevice;
 	ID3D11DeviceContext*	m_pd3dDeviceContext;
 	ID3D11DepthStencilView* pDSV;
+
+	int m_Width;
+	int m_Height;
 
 	//Screen
 	IDXGISwapChain*         m_pSwapChain;
@@ -87,4 +92,9 @@ private:
 	//Texture2Ds
 	ID3D11Resource *m_pTexture2Ds[ELRenderer_Max_Texture2D];
 	ID3D11ShaderResourceView *m_pTex2DView[ELRenderer_Max_Texture2D];
+
+	//MRT
+	ID3D11Texture2D *mMRTTexture2D[4];
+	ID3D11ShaderResourceView *MRTTexture2DSRV[4];
+	ID3D11RenderTargetView *mMRTTexture2DRTV[4];
 };

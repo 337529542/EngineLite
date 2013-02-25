@@ -64,6 +64,9 @@ void ELRenderer::Setup( HWND hWnd )
 	UINT height = rc.bottom - rc.top;
 	UINT createDeviceFlags = 0;
 
+	m_Width = width;
+	m_Height = height;
+
 	//setup Viewport
 	m_vp.Width = width;
 	m_vp.Height = height;
@@ -231,10 +234,16 @@ void ELRenderer::Setup( HWND hWnd )
 	samplerDesc.MinLOD = 0; 
 	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 	m_pd3dDevice->CreateSamplerState(&samplerDesc, &m_GeometrySamplerState);
+
+	//Create MRT
+	CreateMRT();
 }
 
 void ELRenderer::Shutdown()
 {
+	//Release MRT
+	ReleaseMRT();
+
 	//Delete m_VertexBuffers
 	for(int i=0; i<ELRenderer_Max_Vertex_Buffers; i++)
 		if(m_VertexBuffers[i] != 0)
@@ -329,8 +338,8 @@ void ELRenderer::LoadGeometryPShader()
 	hr = D3DX11CompileFromFile(ELRenderer_GeometryPShader_FilePath, NULL, NULL, ELRenderer_GeometryPShader_Func, "ps_4_0", shaderFlags, 0, NULL, &pshader, &pErrmsg, NULL);
 	if( FAILED(hr) )
 	{
+		TRACE("%s", pErrmsg->GetBufferPointer());
 		throw "D3DX11CompileFromFile";
-		//TRACE("%s", pErrmsg->GetBufferPointer());
 	}
 	else
 	{
@@ -493,9 +502,20 @@ void ELRenderer::DrawMesh(const int IBuffer, const int VBuffer, int NumTriangles
 
 void ELRenderer::BeginGeometryDebug()
 {
-	m_pd3dDeviceContext->OMSetRenderTargets( 1, &m_pRenderTargetView_Screen, pDSV );
-	float ClearColor[4] = { 0.0f, 0.05f, 0.5f, 1.0f }; //red,green,blue,alpha
-	m_pd3dDeviceContext->ClearRenderTargetView( m_pRenderTargetView_Screen, ClearColor );
+	ID3D11RenderTargetView *mrt[4];
+	mrt[0] = m_pRenderTargetView_Screen;
+	mrt[1] = mMRTTexture2DRTV[1];
+	mrt[2] = mMRTTexture2DRTV[2];
+	mrt[3] = mMRTTexture2DRTV[3];
+
+	m_pd3dDeviceContext->OMSetRenderTargets( 4, mrt, pDSV );
+
+	float ClearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f }; //red,green,blue,alpha
+	m_pd3dDeviceContext->ClearRenderTargetView( mrt[0], ClearColor );
+	m_pd3dDeviceContext->ClearRenderTargetView( mrt[1], ClearColor );
+	m_pd3dDeviceContext->ClearRenderTargetView( mrt[2], ClearColor );
+	m_pd3dDeviceContext->ClearRenderTargetView( mrt[3], ClearColor );
+
 	m_pd3dDeviceContext->ClearDepthStencilView(pDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
 	m_pd3dDeviceContext->VSSetShader(m_GeometryVShader, NULL, 0);
@@ -586,7 +606,6 @@ int ELRenderer::CreateTexture2D( char* filepath )
 	srvDesc.Texture2D.MipLevels = desc.MipLevels;
 	srvDesc.Texture2D.MostDetailedMip = 0;
 
-	ID3D11ShaderResourceView *pSRView = NULL;
 	hr = m_pd3dDevice->CreateShaderResourceView( m_pTexture2Ds[resindex], &srvDesc, &m_pTex2DView[resindex] );
 	if(FAILED(hr)) 
 	{
@@ -611,4 +630,116 @@ void ELRenderer::DeleteTexture2D(int handle)
 void ELRenderer::SetGeometryDiffuseTexture2D( int handle )
 {
 	m_pd3dDeviceContext->PSSetShaderResources(0, 1, &m_pTex2DView[handle]);
+}
+
+void ELRenderer::CreateMRT()
+{
+	//Create Texture2D
+	D3D11_TEXTURE2D_DESC desc;
+	desc.Width = m_Width;
+	desc.Height = m_Height;
+	desc.MipLevels = 1;
+	desc.ArraySize = 1;
+	desc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	desc.SampleDesc.Quality = 0;
+	desc.SampleDesc.Count = 1;
+	desc.Usage = D3D11_USAGE_DEFAULT;
+	desc.BindFlags = D3D11_BIND_SHADER_RESOURCE|D3D11_BIND_RENDER_TARGET;
+	desc.CPUAccessFlags = NULL;
+	desc.MiscFlags = 0;
+
+	HRESULT hr = m_pd3dDevice->CreateTexture2D( &desc, NULL, &mMRTTexture2D[0] );
+	if(FAILED(hr)) 
+	{
+		throw "MRT CreateTexture2D 1";
+	}
+
+	hr = m_pd3dDevice->CreateTexture2D( &desc, NULL, &mMRTTexture2D[1] );
+	if(FAILED(hr)) 
+	{
+		throw "MRT CreateTexture2D 2";
+	}
+
+	hr = m_pd3dDevice->CreateTexture2D( &desc, NULL, &mMRTTexture2D[2] );
+	if(FAILED(hr)) 
+	{
+		throw "MRT CreateTexture2D 3";
+	}
+
+	hr = m_pd3dDevice->CreateTexture2D( &desc, NULL, &mMRTTexture2D[3] );
+	if(FAILED(hr)) 
+	{
+		throw "MRT CreateTexture2D 4";
+	}
+
+	//Create Shader resource viwe
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+	srvDesc.Format = desc.Format;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = desc.MipLevels;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+
+	hr = m_pd3dDevice->CreateShaderResourceView( mMRTTexture2D[0], &srvDesc, &MRTTexture2DSRV[0] );
+	if(FAILED(hr)) 
+	{
+		throw "MRT CreateShaderResourceView 1";
+	}
+
+	hr = m_pd3dDevice->CreateShaderResourceView( mMRTTexture2D[1], &srvDesc, &MRTTexture2DSRV[1] );
+	if(FAILED(hr)) 
+	{
+		throw "MRT CreateShaderResourceView 2";
+	}
+
+	hr = m_pd3dDevice->CreateShaderResourceView( mMRTTexture2D[2], &srvDesc, &MRTTexture2DSRV[2] );
+	if(FAILED(hr)) 
+	{
+		throw "MRT CreateShaderResourceView 3";
+	}
+
+	hr = m_pd3dDevice->CreateShaderResourceView( mMRTTexture2D[3], &srvDesc, &MRTTexture2DSRV[3] );
+	if(FAILED(hr)) 
+	{
+		throw "MRT CreateShaderResourceView 4";
+	}
+
+	//Create Render target view
+	D3D11_RENDER_TARGET_VIEW_DESC rtvdesc;
+	rtvdesc.Format=desc.Format;
+	rtvdesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+	rtvdesc.Texture2D.MipSlice = 0;
+
+	hr = m_pd3dDevice->CreateRenderTargetView(mMRTTexture2D[0], &rtvdesc, &mMRTTexture2DRTV[0]);
+	if(FAILED(hr)) 
+	{
+		throw "MRT CreateRenderTargetView 1";
+	}
+
+	hr = m_pd3dDevice->CreateRenderTargetView(mMRTTexture2D[1], &rtvdesc, &mMRTTexture2DRTV[1]);
+	if(FAILED(hr)) 
+	{
+		throw "MRT CreateRenderTargetView 2";
+	}
+
+	hr = m_pd3dDevice->CreateRenderTargetView(mMRTTexture2D[2], &rtvdesc, &mMRTTexture2DRTV[2]);
+	if(FAILED(hr)) 
+	{
+		throw "MRT CreateRenderTargetView 3";
+	}
+
+	hr = m_pd3dDevice->CreateRenderTargetView(mMRTTexture2D[3], &rtvdesc, &mMRTTexture2DRTV[3]);
+	if(FAILED(hr)) 
+	{
+		throw "MRT CreateRenderTargetView 4";
+	}
+}
+
+void ELRenderer::ReleaseMRT()
+{
+	for(int i=0; i<4; i++)
+	{
+		mMRTTexture2DRTV[i]->Release();
+		MRTTexture2DSRV[i]->Release();
+		mMRTTexture2D[i]->Release();
+	}
 }
