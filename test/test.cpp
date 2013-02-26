@@ -127,7 +127,7 @@ void TestUpdate()
 	ELMatrix4x4 Smat4;
 	Smat4.setScale(ELVector3(0.5f, 0.5f, 0.5f));
 	cube1->GetWorldMatrix()->setYaw(yaw);
-	yaw += 0.00035;
+	yaw += 0.0005;
 
 	cube1->GetWorldMatrix()->mul(Smat4);
 
