@@ -235,6 +235,24 @@ void ELRenderer::Setup( HWND hWnd )
 	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 	m_pd3dDevice->CreateSamplerState(&samplerDesc, &m_GeometrySamplerState);
 
+	//Create Rasterizer State for Geometry stage
+	D3D11_RASTERIZER_DESC rasterizerState;
+	rasterizerState.FillMode = D3D11_FILL_SOLID;
+	rasterizerState.CullMode = D3D11_CULL_BACK;
+	rasterizerState.FrontCounterClockwise = true;
+	rasterizerState.DepthBias = 0;
+	rasterizerState.DepthBiasClamp = 0;
+	rasterizerState.SlopeScaledDepthBias = 0;
+	rasterizerState.DepthClipEnable = true;
+	rasterizerState.ScissorEnable = false;
+	rasterizerState.MultisampleEnable = false;
+	rasterizerState.AntialiasedLineEnable = false;
+	m_pd3dDevice->CreateRasterizerState( &rasterizerState, &m_GeometryRasterState );
+	if(FAILED(hr)) 
+	{ 
+		throw "CreateRasterizerState"; 
+	}
+
 	//Create MRT
 	CreateMRT();
 }
@@ -526,6 +544,8 @@ void ELRenderer::BeginGeometryDebug()
 	m_pd3dDeviceContext->RSSetViewports( 1, &m_vp );
 
 	m_pd3dDeviceContext->PSSetSamplers(0, 1, &m_GeometrySamplerState);
+
+	m_pd3dDeviceContext->RSSetState(m_GeometryRasterState);
 
 }
 

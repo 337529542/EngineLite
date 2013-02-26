@@ -11,9 +11,16 @@ public:
 	void DrawMesh();
 
 private:
+	void loadMesh();
+
+private:
 	ELRenderer *m_Renderer;
 	ELMatrix4x4 m_WorldMat;
 
 	int VBuffer;
 	int IBuffer;
+
+	float CubVBuf[20000];
+	unsigned short CubeIBuf[20000];
+	int vCount;
 };

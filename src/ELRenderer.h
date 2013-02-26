@@ -82,6 +82,7 @@ private:
 	ID3D11PixelShader *m_GeometryPShader;
 	ID3D11InputLayout *m_GeometryLayout;
 	ID3D11SamplerState *m_GeometrySamplerState;
+	ID3D11RasterizerState *m_GeometryRasterState;
 
 	//Vertex Buffers
 	ID3D11Buffer *m_VertexBuffers[ELRenderer_Max_Vertex_Buffers];

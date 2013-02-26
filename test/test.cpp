@@ -80,9 +80,9 @@ void TestStart()
 	}
 
 	//test load texture
-	for(int i=0; i<50; i++)
+	for(int i=0; i<1; i++)
 	{
-		tex2D[i] = renderer->CreateTexture2D("Media\\test.bmp");
+		tex2D[i] = renderer->CreateTexture2D("Media\\AmmoBoxdiffus.png");
 		if(tex2D[i] == -1)
 			TRACE("%s", "create tex failed\n");
 	}
@@ -118,14 +118,18 @@ void TestUpdate()
 	ELMatrix4x4 ViewMatrix;
 	ELMatrix4x4 PerspectiveMatrix;
 
-	PerspectiveMatrix.makePerspectiveMatrix(D3DX_PI * 0.6f, 800.0f/600.0f, 0.1f, 100.0f);
+	PerspectiveMatrix.makePerspectiveMatrix(D3DX_PI * 0.4f, 800.0f/600.0f, 0.1f, 1000.0f);
 	ViewMatrix.resetMatrix();
-	ViewMatrix.setTrans(ELVector3(0, 0, 1));
+	ViewMatrix.setTrans(ELVector3(0, 0, 70));
 	cube1->GetWorldMatrix()->resetMatrix();
 
 	static float yaw = 0;
-	cube1->GetWorldMatrix()->setRoll(yaw);
-	yaw += 0.001;
+	ELMatrix4x4 Smat4;
+	Smat4.setScale(ELVector3(0.5f, 0.5f, 0.5f));
+	cube1->GetWorldMatrix()->setYaw(yaw);
+	yaw += 0.00035;
+
+	cube1->GetWorldMatrix()->mul(Smat4);
 
 	for(int i=0; i<4; i++)
 		for(int j=0; j<4; j++)
