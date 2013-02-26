@@ -171,16 +171,12 @@ void ELRenderer::Setup( HWND hWnd )
 	dsDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
 	dsDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
 
-	// Create depth stencil state
-	ID3D11DepthStencilState * pDSState;
-	hr = m_pd3dDevice->CreateDepthStencilState(&dsDesc, &pDSState);
+	// Create depth stencil state for Geometry stage
+	hr = m_pd3dDevice->CreateDepthStencilState(&dsDesc, &m_GeometryDSState);
 	if(FAILED(hr)) 
 	{ 
 		throw "CreateDepthStencilState"; 
 	}
-
-	// Bind depth stencil state
-	m_pd3dDeviceContext->OMSetDepthStencilState(pDSState, 1);
 
 	D3D11_DEPTH_STENCIL_VIEW_DESC descDSV;
 	descDSV.Format = DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
@@ -255,10 +251,87 @@ void ELRenderer::Setup( HWND hWnd )
 
 	//Create MRT
 	CreateMRT();
+
+	//Init for Lighting...
+	LoadLightingVShaders();
+	LoadLightingPShaders();
+
+		//Create Rasterizer State for Directional Light
+	//D3D11_RASTERIZER_DESC rasterizerState;
+	rasterizerState.FillMode = D3D11_FILL_SOLID;
+	rasterizerState.CullMode = D3D11_CULL_NONE;
+	rasterizerState.FrontCounterClockwise = true;
+	rasterizerState.DepthBias = 0;
+	rasterizerState.DepthBiasClamp = 0;
+	rasterizerState.SlopeScaledDepthBias = 0;
+	rasterizerState.DepthClipEnable = false;
+	rasterizerState.ScissorEnable = false;
+	rasterizerState.MultisampleEnable = false;
+	rasterizerState.AntialiasedLineEnable = false;
+	m_pd3dDevice->CreateRasterizerState( &rasterizerState, &m_DirLightRState );
+	if(FAILED(hr)) 
+	{ 
+		throw "CreateRasterizerState"; 
+	}
+
+		//Create DepthStencilState for Directional lighting
+	// Depth test parameters
+	dsDesc.DepthEnable = false;
+	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
+
+	// Stencil test parameters
+	dsDesc.StencilEnable = false;
+	dsDesc.StencilReadMask = 0xFF;
+	dsDesc.StencilWriteMask = 0xFF;
+
+	// Stencil operations if pixel is front-facing
+	dsDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	dsDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
+	dsDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	dsDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+	// Stencil operations if pixel is back-facing
+	dsDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	dsDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
+	dsDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	dsDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+	// Create depth stencil state
+	hr = m_pd3dDevice->CreateDepthStencilState(&dsDesc, &m_DirLightDSState);
+	if(FAILED(hr)) 
+	{ 
+		throw "CreateDepthStencilState"; 
+	}
+
+	//Create Sampler for Lighting
+	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR; 
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP; 
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP; 
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP; 
+	samplerDesc.MipLODBias = 0.0f; 
+	samplerDesc.MaxAnisotropy = 1; 
+	samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS; 
+	samplerDesc.BorderColor[0] = 0; 
+	samplerDesc.BorderColor[1] = 0; 
+	samplerDesc.BorderColor[2] = 0; 
+	samplerDesc.BorderColor[3] = 0; 
+	samplerDesc.MinLOD = 0; 
+	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+	m_pd3dDevice->CreateSamplerState(&samplerDesc, &m_LightingSamplerState);
+
+		//Create Index and Vertex Buffers for Directional Lighting
+	CreateDirectionalLightStuff();
 }
 
 void ELRenderer::Shutdown()
 {
+	//Release Lighting
+	m_DirLightVShader->Release();
+	m_DirLightPShader->Release();
+	m_DirLightLayout->Release();
+	m_DirLightRState->Release();
+
 	//Release MRT
 	ReleaseMRT();
 
@@ -291,6 +364,10 @@ void ELRenderer::Shutdown()
 
 	//Delete SamplerState
 	m_GeometrySamplerState->Release();
+
+	m_GeometryDSState->Release();
+
+	m_GeometryRasterState->Release();
 }
 
 void ELRenderer::LoadGeometryVShader()
@@ -521,7 +598,8 @@ void ELRenderer::DrawMesh(const int IBuffer, const int VBuffer, int NumTriangles
 void ELRenderer::BeginGeometryDebug()
 {
 	ID3D11RenderTargetView *mrt[4];
-	mrt[0] = m_pRenderTargetView_Screen;
+	//mrt[0] = m_pRenderTargetView_Screen;
+	mrt[0] = mMRTTexture2DRTV[0];
 	mrt[1] = mMRTTexture2DRTV[1];
 	mrt[2] = mMRTTexture2DRTV[2];
 	mrt[3] = mMRTTexture2DRTV[3];
@@ -533,6 +611,8 @@ void ELRenderer::BeginGeometryDebug()
 	m_pd3dDeviceContext->ClearRenderTargetView( mrt[1], ClearColor );
 	m_pd3dDeviceContext->ClearRenderTargetView( mrt[2], ClearColor );
 	m_pd3dDeviceContext->ClearRenderTargetView( mrt[3], ClearColor );
+
+	m_pd3dDeviceContext->OMSetDepthStencilState(m_GeometryDSState, 1);
 
 	m_pd3dDeviceContext->ClearDepthStencilView(pDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
@@ -551,7 +631,7 @@ void ELRenderer::BeginGeometryDebug()
 
 void ELRenderer::EndGeometryDebug()
 {
-	m_pSwapChain->Present( 0, 0 );
+	//m_pSwapChain->Present( 0, 0 );
 }
 
 int ELRenderer::CreateTexture2D( char* filepath )
@@ -761,5 +841,192 @@ void ELRenderer::ReleaseMRT()
 		mMRTTexture2DRTV[i]->Release();
 		MRTTexture2DSRV[i]->Release();
 		mMRTTexture2D[i]->Release();
+	}
+}
+
+void ELRenderer::BeginLightingDebug()
+{
+	ID3D11RenderTargetView *mrt[1];
+	mrt[0] = m_pRenderTargetView_Screen;
+
+	m_pd3dDeviceContext->OMSetRenderTargets( 1, mrt, pDSV );
+
+	float ClearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f }; //red,green,blue,alpha
+	m_pd3dDeviceContext->ClearRenderTargetView( mrt[0], ClearColor );
+
+	ProcessDirectionalLights();
+}
+
+void ELRenderer::EndLightingDebug()
+{
+	m_pSwapChain->Present( 0, 0 );
+}
+
+void ELRenderer::LoadLightingVShaders()
+{
+	HRESULT hr = S_OK;;
+
+
+	//Load DirectionalLight VShader
+	//compile shader
+	ID3D10Blob *pshader;
+	ID3D10Blob *pErrmsg;
+
+
+	//for Pix debug
+	UINT shaderFlags = D3D10_SHADER_DEBUG | D3D10_SHADER_SKIP_OPTIMIZATION;
+	hr = D3DX11CompileFromFile(ELRenderer_DirectionalLightVShader_FilePath, NULL, NULL, ELRenderer_DirectionalLightVShader_Func, "vs_4_0", shaderFlags, 0, NULL, &pshader, &pErrmsg, NULL);
+	if( FAILED(hr) )
+	{
+		throw "D3DX11CompileFromFile";
+	}
+	else
+	{
+		//create vshader
+		hr = m_pd3dDevice->CreateVertexShader(pshader->GetBufferPointer(), pshader->GetBufferSize(), NULL, &m_DirLightVShader);
+		if( FAILED(hr) )
+		{
+			throw "CreateVertexShader";
+		}
+		else
+		{
+			//create layout
+			const D3D11_INPUT_ELEMENT_DESC basicVertexLayoutDesc[] =
+			{
+				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			};
+
+			hr = m_pd3dDevice->CreateInputLayout(
+				basicVertexLayoutDesc,
+				ARRAYSIZE(basicVertexLayoutDesc),
+				pshader->GetBufferPointer(),
+				pshader->GetBufferSize(),
+				&m_DirLightLayout
+				);
+
+			if( FAILED(hr) )
+			{
+				throw "CreateInputLayout";
+			}
+		}
+	}
+}
+
+void ELRenderer::LoadLightingPShaders()
+{
+	HRESULT hr = S_OK;;
+
+	//Load DirectionalLight PShader
+	//compile shader
+	ID3D10Blob *pshader;
+	ID3D10Blob *pErrmsg;
+
+	//for Pix debug
+	UINT shaderFlags = D3D10_SHADER_DEBUG | D3D10_SHADER_SKIP_OPTIMIZATION;
+	hr = D3DX11CompileFromFile(ELRenderer_DirectionalLightPShader_FilePath, NULL, NULL, ELRenderer_DirectionalLightPShader_Func, "ps_4_0", shaderFlags, 0, NULL, &pshader, &pErrmsg, NULL);
+	if( FAILED(hr) )
+	{
+		TRACE("%s", pErrmsg->GetBufferPointer());
+		throw "D3DX11CompileFromFile";
+	}
+	else
+	{
+		//create vshader
+		hr = m_pd3dDevice->CreatePixelShader(pshader->GetBufferPointer(), pshader->GetBufferSize(), NULL, &m_DirLightPShader);
+		if( FAILED(hr) )
+		{
+			throw "CreatePixelShader";
+		}
+	}
+}
+
+void ELRenderer::ProcessDirectionalLights()
+{
+	//just for test, process one test light
+	m_pd3dDeviceContext->OMSetDepthStencilState(m_DirLightDSState, 1);
+
+	m_pd3dDeviceContext->VSSetShader(m_DirLightVShader, NULL, 0);
+	m_pd3dDeviceContext->IASetInputLayout(m_DirLightLayout);
+	m_pd3dDeviceContext->PSSetShader(m_DirLightPShader, NULL, 0);
+	m_pd3dDeviceContext->RSSetViewports( 1, &m_vp );
+
+	m_pd3dDeviceContext->PSSetSamplers(0, 1, &m_LightingSamplerState);
+	m_pd3dDeviceContext->RSSetState(m_DirLightRState);
+
+	m_pd3dDeviceContext->PSSetShaderResources(0, 1, &MRTTexture2DSRV[1]);
+
+	UINT stride = sizeof(float) * 5;
+	UINT offset = 0;
+
+	m_pd3dDeviceContext->IASetVertexBuffers( 0, 1, &m_DirLightVertexBuffer, &stride, &offset );
+	m_pd3dDeviceContext->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
+
+	m_pd3dDeviceContext->IASetIndexBuffer(m_DirLightIndexBuffer, DXGI_FORMAT_R16_UINT, 0);
+
+	m_pd3dDeviceContext->DrawIndexed(6, 0, 0);
+
+	ID3D11ShaderResourceView *RSNULL = NULL;
+	m_pd3dDeviceContext->PSSetShaderResources(0, 1, &RSNULL);
+
+
+}
+
+void ELRenderer::CreateDirectionalLightStuff()
+{
+	float vbuf[20] = {
+		-1, 1, 0.5f,
+		0, 1,
+		1, 1, 0.5f,
+		1, 1,
+		-1, -1, 0.5f,
+		0, 0,
+		1, -1, 0.5f,
+		1, 0,
+	};
+
+	unsigned short ibuf[6] = {
+		0, 2, 1,
+		1, 2, 3,
+	};
+
+	//Vertex Buffer
+	D3D11_BUFFER_DESC bd;
+	bd.Usage = D3D11_USAGE_DEFAULT;
+	bd.ByteWidth = sizeof( float ) * 20;
+	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	bd.CPUAccessFlags = 0;
+	bd.MiscFlags = 0;
+	bd.StructureByteStride = 0;
+
+	D3D11_SUBRESOURCE_DATA InitData;
+	InitData.pSysMem = vbuf;
+	InitData.SysMemPitch = 0;
+	InitData.SysMemSlicePitch = 0;
+
+	HRESULT hr = m_pd3dDevice->CreateBuffer(&bd, &InitData, &m_DirLightVertexBuffer);
+	if( FAILED(hr) )
+	{
+		throw "CreateDirectionalLightBuffers";
+	}
+
+	//Index Buffer
+	D3D11_BUFFER_DESC indexBufferDesc;
+	indexBufferDesc.ByteWidth = sizeof(unsigned short) * 6;
+	indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	indexBufferDesc.CPUAccessFlags = 0;
+	indexBufferDesc.MiscFlags = 0;
+	indexBufferDesc.StructureByteStride = 0;
+
+	D3D11_SUBRESOURCE_DATA indexBufferData;
+	indexBufferData.pSysMem = ibuf;
+	indexBufferData.SysMemPitch = 0;
+	indexBufferData.SysMemSlicePitch = 0;
+
+	hr = m_pd3dDevice->CreateBuffer(&indexBufferDesc, &indexBufferData, &m_DirLightIndexBuffer);
+	if( FAILED(hr) )
+	{
+		throw "CreateDirectionalLightBuffers";
 	}
 }

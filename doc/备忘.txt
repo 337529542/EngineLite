@@ -18,3 +18,5 @@ T0 rgb diffuse
 
 GeoDraw，首先画三角，然后画复杂模型，都实现后，画延迟着色的第一阶段的东西(画之前修改BeginGeometryDebug和EndGeometryDebug)
 都搞定后，开始实现光线阶段
+
+DirectionalLight

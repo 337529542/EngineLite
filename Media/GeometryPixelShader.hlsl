@@ -24,8 +24,8 @@ PSOutput GeometryPixelShader(PixelShaderInput input)
     //return difftex.Sample(diffSampler, input.texuv);
 
     PSOutput outp;
-    outp.t0 = difftex.Sample(diffSampler, input.texuv);
-    outp.t1 = float4(0.0f, 1.0f, 0.0f, 1.0f);
+    outp.t1 = difftex.Sample(diffSampler, input.texuv);
+    outp.t0 = float4(0.0f, 1.0f, 0.0f, 1.0f);
     outp.t2 = float4(0.0f, 0.0f, 1.0f, 1.0f);
     outp.t3 = float4(1.0f, 1.0f, 0.0f, 1.0f);
     return outp;

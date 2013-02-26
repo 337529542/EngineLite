@@ -153,6 +153,9 @@ void TestUpdate()
 	cube1->DrawMesh();
 
 	renderer->EndGeometryDebug();
+
+	renderer->BeginLightingDebug();
+	renderer->EndLightingDebug();
 }
 /////////////////////////////////////////////////////////////////////////////////////
 
