@@ -13,9 +13,11 @@ struct PSOutput
     float4 t3 : SV_Target3;
 };
 
-sampler diffSampler :register(s0);
+sampler mySampler :register(s0);
 
 Texture2D <float4> difftex : register(t0);
+Texture2D <float4> normtex : register(t1);
+Texture2D <float4> spectex : register(t2);
 
 PSOutput GeometryPixelShader(PixelShaderInput input)
 {
@@ -24,9 +26,9 @@ PSOutput GeometryPixelShader(PixelShaderInput input)
     //return difftex.Sample(diffSampler, input.texuv);
 
     PSOutput outp;
-    outp.t1 = difftex.Sample(diffSampler, input.texuv);
-    outp.t0 = float4(0.0f, 1.0f, 0.0f, 1.0f);
-    outp.t2 = float4(0.0f, 0.0f, 1.0f, 1.0f);
-    outp.t3 = float4(1.0f, 1.0f, 0.0f, 1.0f);
+    outp.t0 = difftex.Sample(mySampler, input.texuv);
+    outp.t1 = normtex.Sample(mySampler, input.texuv);
+    outp.t2 = spectex.Sample(mySampler, input.texuv);
+    outp.t3 = input.pos;
     return outp;
 }

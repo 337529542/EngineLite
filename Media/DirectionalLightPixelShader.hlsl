@@ -9,14 +9,18 @@ struct PSOutput
     float4 color :COLOR;
 };
 
-sampler diffSampler :register(s0);
+sampler mySampler :register(s0);
 
 Texture2D <float4> difftex : register(t0);
+Texture2D <float4> normtex : register(t1);
+Texture2D <float4> spectex : register(t2);
+Texture2D <float4> postex : register(t3);
 
 PSOutput DirectionalLightPixelShader(PixelShaderInput input) : SV_TARGET
 {
     PSOutput outp;
     //outp.color = float4(1.0f, 1.0f, 0.0f, 1.0f);
-    outp.color = difftex.Sample(diffSampler, input.tex0);
+    outp.color = spectex.Sample(mySampler, input.tex0);
+    //outp.color = outp.color * 0.003f;
     return outp;
 }

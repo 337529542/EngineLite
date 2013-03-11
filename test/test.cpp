@@ -87,6 +87,9 @@ void TestStart()
 			TRACE("%s", "create tex failed\n");
 	}
 
+	tex2D[1] = renderer->CreateTexture2D("Media\\AmmoBoxnormal.png");
+	tex2D[2] = renderer->CreateTexture2D("Media\\AmmoBoxspecular.png");
+
 	//add a cube
 	cube1 = new ELCube(renderer);
 }
@@ -149,6 +152,8 @@ void TestUpdate()
 		throw "foo";
 
 	renderer->SetGeometryDiffuseTexture2D(tex2D[0]);
+	renderer->SetGeometryNormalTexture2D(tex2D[1]);
+	renderer->SetGeometrySpecularTexture2D(tex2D[2]);
 
 	cube1->DrawMesh();
 
