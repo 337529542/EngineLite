@@ -3,6 +3,7 @@ struct PixelShaderInput
     float4 pos : SV_POSITION;
     float4 norm: TEXCOORD0;
     float2 texuv: TEXCOORD1;
+    float4 posinworld: TEXCOORD2;
 };
 
 struct PSOutput
@@ -27,8 +28,8 @@ PSOutput GeometryPixelShader(PixelShaderInput input)
 
     PSOutput outp;
     outp.t0 = difftex.Sample(mySampler, input.texuv);
-    outp.t1 = normtex.Sample(mySampler, input.texuv);
+    outp.t1 = input.norm;//normtex.Sample(mySampler, input.texuv);
     outp.t2 = spectex.Sample(mySampler, input.texuv);
-    outp.t3 = input.pos;
+    outp.t3 = input.posinworld;
     return outp;
 }

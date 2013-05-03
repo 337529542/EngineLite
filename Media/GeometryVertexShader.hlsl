@@ -18,6 +18,7 @@ struct PixelShaderInput
     float4 pos : SV_POSITION;
     float4 norm: TEXCOORD0;
     float2 texuv: TEXCOORD1;
+    float4 posinworld: TEXCOORD2;
 };
 
 PixelShaderInput GeometryVertexShader(VertexShaderInput input)
@@ -31,6 +32,7 @@ PixelShaderInput GeometryVertexShader(VertexShaderInput input)
     vertexShaderOutput.norm = mul(float4(input.norm, 0.0f), svar.worldMatrix);
 
     vertexShaderOutput.texuv = input.texuv;
+    vertexShaderOutput.posinworld = float4(input.pos, 0.0f);
 
     return vertexShaderOutput;
 }
