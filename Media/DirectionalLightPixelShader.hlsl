@@ -18,16 +18,16 @@ Texture2D <float4> postex : register(t3);
 
 PSOutput DirectionalLightPixelShader(PixelShaderInput input) : SV_TARGET
 {
-    float3 lightdir = float3(-0.5f, -1.0f, -1.0f);
-    float3 lightcolor = float3(1, 1, 1);
+    float3 lightdir = float3(-200.0f, 0.0f, -100.0f);
+    float3 lightcolor = float3(0.8, 0.8, 0.8);
     
     lightdir = normalize(lightdir);
 
-    float K_d = 1;
-    float Ns = 30;
+    float K_d = 0.8;
+    float Ns = 10;
     float Ks = 2;
     float3 sV = float3(0, 0, -70);
-    float3 Ka = float3(0.3, 0.3, 0.3);//ambi
+    float3 Ka = float3(0.2, 0.2, 0.2);//ambi
     float3 ambi = difftex.Sample(mySampler, input.tex0);
 
     PSOutput outp;
@@ -49,9 +49,10 @@ PSOutput DirectionalLightPixelShader(PixelShaderInput input) : SV_TARGET
 
 
     float3 finalc =ambic + diffc + Ispec;
+    //float3 finalc =ambic + diffc;
 
     outp.color = float4(finalc, 1.0f);//float4(1.0f, 1.0f, 0.0f, 1.0f);
-    //outp.color = postex.Sample(mySampler, input.tex0);
+    //outp.color = normtex.Sample(mySampler, input.tex0);
     //outp.color = outp.color * 0.03f;
     return outp;
 }

@@ -406,6 +406,7 @@ void ELRenderer::LoadGeometryVShader()
 				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 				{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 				{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 			};
 
 			hr = m_pd3dDevice->CreateInputLayout(
@@ -586,7 +587,7 @@ int ELRenderer::SetGeometryConstant( const ELRenderer_ShaderVars_Geometry *const
 
 void ELRenderer::DrawMesh(const int IBuffer, const int VBuffer, int NumTriangles)
 {
-	UINT stride = sizeof(float) * 8;
+	UINT stride = sizeof(float) * 11;
 	UINT offset = 0;
 
 	m_pd3dDeviceContext->IASetVertexBuffers( 0, 1, &m_VertexBuffers[VBuffer], &stride, &offset );

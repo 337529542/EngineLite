@@ -28,7 +28,7 @@ ELCube::ELCube( ELRenderer *renderer )
 		0, 0,
 	};
 
-	VBuffer = m_Renderer->CreateVertexBuffer(CubVBuf, vCount * 8);
+	VBuffer = m_Renderer->CreateVertexBuffer(CubVBuf, vCount * 11);
 
 	//set Matrix
 	m_WorldMat.resetMatrix();
@@ -98,48 +98,65 @@ void ELCube::loadMesh()
 		aiVector3D *v1 = pmesh->mVertices + v1ind;
 		aiVector3D *v2 = pmesh->mVertices + v2ind;
 
-		CubVBuf[i*24 + 0] = v0->x;
-		CubVBuf[i*24 + 1] = v0->y;
-		CubVBuf[i*24 + 2] = v0->z;
+		CubVBuf[i*33 + 0] = v0->x;
+		CubVBuf[i*33 + 1] = v0->y;
+		CubVBuf[i*33 + 2] = v0->z;
 
-		CubVBuf[i*24 + 8] = v1->x;
-		CubVBuf[i*24 + 9] = v1->y;
-		CubVBuf[i*24 + 10] = v1->z;
+		CubVBuf[i*33 + 11] = v1->x;
+		CubVBuf[i*33 + 12] = v1->y;
+		CubVBuf[i*33 + 13] = v1->z;
 
-		CubVBuf[i*24 + 16] = v2->x;
-		CubVBuf[i*24 + 17] = v2->y;
-		CubVBuf[i*24 + 18] = v2->z;
+		CubVBuf[i*33 + 22] = v2->x;
+		CubVBuf[i*33 + 23] = v2->y;
+		CubVBuf[i*33 + 24] = v2->z;
 
 		//normal
 		aiVector3D *n0 = pmesh->mNormals + v0ind;
 		aiVector3D *n1 = pmesh->mNormals + v1ind;
 		aiVector3D *n2 = pmesh->mNormals + v2ind;
 
-		CubVBuf[i*24 + 3] = n0->x;
-		CubVBuf[i*24 + 4] = n0->y;
-		CubVBuf[i*24 + 5] = n0->z;
+		CubVBuf[i*33 + 3] = n0->x;
+		CubVBuf[i*33 + 4] = n0->y;
+		CubVBuf[i*33 + 5] = n0->z;
 
-		CubVBuf[i*24 + 11] = n1->x;
-		CubVBuf[i*24 + 12] = n1->y;
-		CubVBuf[i*24 + 13] = n1->z;
+		CubVBuf[i*33 + 14] = n1->x;
+		CubVBuf[i*33 + 15] = n1->y;
+		CubVBuf[i*33 + 16] = n1->z;
 
-		CubVBuf[i*24 + 19] = n2->x;
-		CubVBuf[i*24 + 20] = n2->y;
-		CubVBuf[i*24 + 21] = n2->z;
+		CubVBuf[i*33 + 25] = n2->x;
+		CubVBuf[i*33 + 26] = n2->y;
+		CubVBuf[i*33 + 27] = n2->z;
 
 		//TexCoord0
 		aiVector3D *t0 = pmesh->mTextureCoords[0] + v0ind;
 		aiVector3D *t1 = pmesh->mTextureCoords[0] + v1ind;
 		aiVector3D *t2 = pmesh->mTextureCoords[0] + v2ind;
 
-		CubVBuf[i*24 + 6] = t0->x;
-		CubVBuf[i*24 + 7] = 1-t0->y;
+		CubVBuf[i*33 + 6] = t0->x;
+		CubVBuf[i*33 + 7] = 1-t0->y;
 
-		CubVBuf[i*24 + 14] = t1->x;
-		CubVBuf[i*24 + 15] = 1-t1->y;
+		CubVBuf[i*33 + 17] = t1->x;
+		CubVBuf[i*33 + 18] = 1-t1->y;
 
-		CubVBuf[i*24 + 22] = t2->x;
-		CubVBuf[i*24 + 23] = 1-t2->y;
+		CubVBuf[i*33 + 28] = t2->x;
+		CubVBuf[i*33 + 29] = 1-t2->y;
+
+		//Tangent
+		aiVector3D *ta0 = pmesh->mTangents + v0ind;
+		aiVector3D *ta1 = pmesh->mTangents + v1ind;
+		aiVector3D *ta2 = pmesh->mTangents + v2ind;
+
+		CubVBuf[i*33 + 8] = ta0->x;
+		CubVBuf[i*33 + 9] = ta0->y;
+		CubVBuf[i*33 + 10] = ta0->z;
+
+		CubVBuf[i*33 + 19] = ta1->x;
+		CubVBuf[i*33 + 20] = ta1->y;
+		CubVBuf[i*33 + 21] = ta1->z;
+
+		CubVBuf[i*33 + 30] = ta2->x;
+		CubVBuf[i*33 + 31] = ta2->y;
+		CubVBuf[i*33 + 32] = ta2->z;
 
 	}
 }
