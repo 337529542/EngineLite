@@ -81,6 +81,8 @@ public:
 
 		int SetGeometryConstant(const ELRenderer_ShaderVars_Geometry *constant);//returns -1 if failed
 		void SetGeometryDiffuseTexture2D(int handle);
+		void SetGeometryNormalTexture2D(int handle);
+		void SetGeometrySpecularTexture2D(int handle);
 		void DrawMesh(const int IBuffer, const int VBuffer, int NumTriangles);
 
 	void EndGeometryAndBeginLighting();

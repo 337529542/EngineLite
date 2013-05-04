@@ -2,6 +2,7 @@
 
 #include <D3DX11async.h>
 #include <d3d10shader.h>
+#include <Dxerr.h>
 
 #ifdef _DEBUG
 void TraceC(LPCTSTR lpszFmt, ...)
@@ -90,15 +91,17 @@ void ELRenderer::Setup( HWND hWnd )
 	sd.SampleDesc.Quality = 0;
 	sd.Windowed = TRUE;
 
+
 	//D3D_FEATURE_LEVEL FeatureLevels = D3D_FEATURE_LEVEL_11_0;
 	D3D_FEATURE_LEVEL FeatureLevels = D3D_FEATURE_LEVEL_10_0;
+	//D3D_FEATURE_LEVEL FeatureLevels = D3D_FEATURE_LEVEL_10_1;
 
 	D3D_FEATURE_LEVEL FeatureLevel;
 
 	if( FAILED (hr = D3D11CreateDeviceAndSwapChain( NULL, 
 		D3D_DRIVER_TYPE_HARDWARE,
 		NULL, 
-		D3D11_CREATE_DEVICE_DEBUG,
+		D3D11_CREATE_DEVICE_SINGLETHREADED,
 		&FeatureLevels, 
 		1, 
 		D3D11_SDK_VERSION, 
@@ -108,6 +111,7 @@ void ELRenderer::Setup( HWND hWnd )
 		&FeatureLevel,
 		&m_pd3dDeviceContext )))
 	{
+		DXTrace( __FILE__, __LINE__, hr, DXGetErrorDescription(hr), FALSE );
 		throw "D3D11CreateDeviceAndSwapChain";
 	}
 
@@ -277,7 +281,7 @@ void ELRenderer::Setup( HWND hWnd )
 		//Create DepthStencilState for Directional lighting
 	// Depth test parameters
 	dsDesc.DepthEnable = false;
-	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
 	dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
 
 	// Stencil test parameters
@@ -631,7 +635,12 @@ void ELRenderer::BeginGeometryDebug()
 
 void ELRenderer::EndGeometryDebug()
 {
-	//m_pSwapChain->Present( 0, 0 );
+	//clear the texture resources.
+	ID3D11ShaderResourceView *RSNULL = NULL;
+	m_pd3dDeviceContext->PSSetShaderResources(0, 1, &RSNULL);
+	m_pd3dDeviceContext->PSSetShaderResources(1, 1, &RSNULL);
+	m_pd3dDeviceContext->PSSetShaderResources(2, 1, &RSNULL);
+	m_pd3dDeviceContext->PSSetShaderResources(3, 1, &RSNULL);
 }
 
 int ELRenderer::CreateTexture2D( char* filepath )
@@ -730,6 +739,16 @@ void ELRenderer::DeleteTexture2D(int handle)
 void ELRenderer::SetGeometryDiffuseTexture2D( int handle )
 {
 	m_pd3dDeviceContext->PSSetShaderResources(0, 1, &m_pTex2DView[handle]);
+}
+
+void ELRenderer::SetGeometryNormalTexture2D( int handle )
+{
+	m_pd3dDeviceContext->PSSetShaderResources(1, 1, &m_pTex2DView[handle]);
+}
+
+void ELRenderer::SetGeometrySpecularTexture2D( int handle )
+{
+	m_pd3dDeviceContext->PSSetShaderResources(2, 1, &m_pTex2DView[handle]);
 }
 
 void ELRenderer::CreateMRT()
