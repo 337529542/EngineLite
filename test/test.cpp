@@ -130,7 +130,7 @@ void TestUpdate()
 	ELMatrix4x4 Smat4;
 	Smat4.setScale(ELVector3(0.5f, 0.5f, 0.5f));
 	cube1->GetWorldMatrix()->setYaw(yaw);
-	yaw += 0.0005;
+	yaw += 0.005;
 
 	cube1->GetWorldMatrix()->mul(Smat4);
 
@@ -204,7 +204,7 @@ HRESULT InitWindow( HINSTANCE hInstance, int nCmdShow )
 		return E_FAIL;
 	// Create window
 	g_hInst = hInstance;
-	RECT rc = { 0, 0, 800, 600 };
+	RECT rc = { 0, 0, 1024, 768 };
 	AdjustWindowRect( &rc, WS_OVERLAPPEDWINDOW, FALSE );
 	g_hWnd = CreateWindow( "EngineLiteTest", "Test", WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, hInstance,
