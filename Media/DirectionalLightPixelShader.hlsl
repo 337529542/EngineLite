@@ -11,7 +11,7 @@ struct PSOutput
 
 sampler diffSampler :register(s0);
 
-Texture2D <float4> difftex : register(t0);
+Texture2D <float4> difftex : register(t2);
 
 PSOutput DirectionalLightPixelShader(PixelShaderInput input) : SV_TARGET
 {

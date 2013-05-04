@@ -954,7 +954,10 @@ void ELRenderer::ProcessDirectionalLights()
 	m_pd3dDeviceContext->PSSetSamplers(0, 1, &m_LightingSamplerState);
 	m_pd3dDeviceContext->RSSetState(m_DirLightRState);
 
-	m_pd3dDeviceContext->PSSetShaderResources(0, 1, &MRTTexture2DSRV[1]);
+	m_pd3dDeviceContext->PSSetShaderResources(0, 1, &MRTTexture2DSRV[0]);
+	m_pd3dDeviceContext->PSSetShaderResources(1, 1, &MRTTexture2DSRV[1]);
+	m_pd3dDeviceContext->PSSetShaderResources(2, 1, &MRTTexture2DSRV[2]);
+	m_pd3dDeviceContext->PSSetShaderResources(3, 1, &MRTTexture2DSRV[3]);
 
 	UINT stride = sizeof(float) * 5;
 	UINT offset = 0;
@@ -968,6 +971,9 @@ void ELRenderer::ProcessDirectionalLights()
 
 	ID3D11ShaderResourceView *RSNULL = NULL;
 	m_pd3dDeviceContext->PSSetShaderResources(0, 1, &RSNULL);
+	m_pd3dDeviceContext->PSSetShaderResources(1, 1, &RSNULL);
+	m_pd3dDeviceContext->PSSetShaderResources(2, 1, &RSNULL);
+	m_pd3dDeviceContext->PSSetShaderResources(3, 1, &RSNULL);
 
 
 }
