@@ -28,6 +28,15 @@ public:
 	float perspectiveMatrix[4][4];
 };
 
+class ELRenderer_ShaderVars_Geometry_Pixel
+{
+public:
+	float K_d;//漫反射系数
+	float Ns;//高光指数
+	float K_s;//镜面反射系数
+	float K_a;//环境光系数
+};
+
 class ELRenderer_DirectionalLight
 {
 public:
@@ -56,6 +65,14 @@ public:
 	}
 };
 
+class ELRenderer_DirectionalLight_PixelShaderVars
+{
+public:
+	float lightrdir[4];
+	float lightcolor[4];
+	float ViewPosInWorld[4];
+};
+
 class ELRenderer
 {
 public:
@@ -80,6 +97,7 @@ public:
 	void BeginGeometry();
 
 		int SetGeometryConstant(const ELRenderer_ShaderVars_Geometry *constant);//returns -1 if failed
+		int SetGeometryPixelConstant(const ELRenderer_ShaderVars_Geometry_Pixel *constant);//returns -1 if failed
 		void SetGeometryDiffuseTexture2D(int handle);
 		void SetGeometryNormalTexture2D(int handle);
 		void SetGeometrySpecularTexture2D(int handle);
@@ -125,6 +143,7 @@ private:
 
 	//Geometry
 	ID3D11Buffer *m_GeometryShaderVarsBuffer;
+	ID3D11Buffer *m_GeometryShaderVarsBufferPixel;
 	ID3D11VertexShader *m_GeometryVShader;
 	ID3D11PixelShader *m_GeometryPShader;
 	ID3D11InputLayout *m_GeometryLayout;
@@ -159,4 +178,5 @@ private:
 	ID3D11DepthStencilState * m_DirLightDSState;
 	ID3D11Buffer *m_DirLightIndexBuffer;
 	ID3D11Buffer *m_DirLightVertexBuffer;
+	ID3D11Buffer *m_DirLightShaderVarsBufferPixel;
 };

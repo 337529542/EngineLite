@@ -212,6 +212,22 @@ void ELRenderer::Setup( HWND hWnd )
 		throw "CreateBuffer m_GeometryShaderVarsBuffer"; 
 	}
 
+	//Create Geometry Shader Vars Buffer Pixel
+	D3D11_BUFFER_DESC GeometryShaderVarsBDPixel;
+	GeometryShaderVarsBDPixel.Usage = D3D11_USAGE_DYNAMIC; 
+	GeometryShaderVarsBDPixel.ByteWidth = sizeof(ELRenderer_ShaderVars_Geometry_Pixel); 
+	GeometryShaderVarsBDPixel.BindFlags = D3D11_BIND_CONSTANT_BUFFER; 
+	GeometryShaderVarsBDPixel.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE; 
+	GeometryShaderVarsBDPixel.MiscFlags = 0; 
+	GeometryShaderVarsBDPixel.StructureByteStride = 0;
+
+	hr = m_pd3dDevice->CreateBuffer(&GeometryShaderVarsBDPixel, NULL, &m_GeometryShaderVarsBufferPixel); 
+	if(FAILED(hr)) 
+	{ 
+		throw "CreateBuffer m_GeometryShaderVarsBufferPixel"; 
+	}
+
+	
 	//Load Geometry VShader
 	LoadGeometryVShader();
 
@@ -259,6 +275,21 @@ void ELRenderer::Setup( HWND hWnd )
 	//Init for Lighting...
 	LoadLightingVShaders();
 	LoadLightingPShaders();
+
+	//Create Directional Light Shader Vars Buffer Pixel
+	D3D11_BUFFER_DESC DirLightShaderVarsBDPixel;
+	DirLightShaderVarsBDPixel.Usage = D3D11_USAGE_DYNAMIC; 
+	DirLightShaderVarsBDPixel.ByteWidth = sizeof(ELRenderer_DirectionalLight_PixelShaderVars); 
+	DirLightShaderVarsBDPixel.BindFlags = D3D11_BIND_CONSTANT_BUFFER; 
+	DirLightShaderVarsBDPixel.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE; 
+	DirLightShaderVarsBDPixel.MiscFlags = 0; 
+	DirLightShaderVarsBDPixel.StructureByteStride = 0;
+
+	hr = m_pd3dDevice->CreateBuffer(&DirLightShaderVarsBDPixel, NULL, &m_DirLightShaderVarsBufferPixel); 
+	if(FAILED(hr)) 
+	{ 
+		throw "CreateBuffer m_DirLightShaderVarsBufferPixel"; 
+	}
 
 		//Create Rasterizer State for Directional Light
 	//D3D11_RASTERIZER_DESC rasterizerState;
@@ -356,6 +387,7 @@ void ELRenderer::Shutdown()
 
 	//Delete m_GeometryShaderVarsBuffer
 	m_GeometryShaderVarsBuffer->Release();
+	m_GeometryShaderVarsBufferPixel->Release();
 
 	//Delete Geometry VShader
 	m_GeometryVShader->Release();
@@ -372,6 +404,10 @@ void ELRenderer::Shutdown()
 	m_GeometryDSState->Release();
 
 	m_GeometryRasterState->Release();
+
+
+	//DirLight
+	m_DirLightShaderVarsBufferPixel->Release();
 }
 
 void ELRenderer::LoadGeometryVShader()
@@ -443,7 +479,7 @@ void ELRenderer::LoadGeometryPShader()
 	}
 	else
 	{
-		//create vshader
+		//create pshader
 		hr = m_pd3dDevice->CreatePixelShader(pshader->GetBufferPointer(), pshader->GetBufferSize(), NULL, &m_GeometryPShader);
 		if( FAILED(hr) )
 		{
@@ -585,6 +621,30 @@ int ELRenderer::SetGeometryConstant( const ELRenderer_ShaderVars_Geometry *const
 	return 0;
 }
 
+int ELRenderer::SetGeometryPixelConstant(const ELRenderer_ShaderVars_Geometry_Pixel *constant)
+{
+	ELRenderer_ShaderVars_Geometry_Pixel *shaderVarsMapPtr;
+
+	D3D11_MAPPED_SUBRESOURCE GeometryShaderMappedResource;
+	HRESULT hr = m_pd3dDeviceContext->Map(m_GeometryShaderVarsBufferPixel, 0, D3D11_MAP_WRITE_DISCARD, 0, &GeometryShaderMappedResource); 
+	if(FAILED(hr)) 
+	{ 
+		return -1;
+	}
+
+	shaderVarsMapPtr = (ELRenderer_ShaderVars_Geometry_Pixel *)GeometryShaderMappedResource.pData;
+
+	shaderVarsMapPtr->K_a = constant->K_a;
+	shaderVarsMapPtr->K_d = constant->K_d;
+	shaderVarsMapPtr->K_s = constant->K_s;
+	shaderVarsMapPtr->Ns = constant->Ns;
+
+	m_pd3dDeviceContext->PSSetConstantBuffers(0, 1, &m_GeometryShaderVarsBufferPixel);
+	m_pd3dDeviceContext->Unmap(m_GeometryShaderVarsBufferPixel, 0);
+
+	return 0;
+}
+
 void ELRenderer::DrawMesh(const int IBuffer, const int VBuffer, int NumTriangles)
 {
 	UINT stride = sizeof(float) * 11;
@@ -612,10 +672,11 @@ void ELRenderer::BeginGeometryDebug()
 	m_pd3dDeviceContext->OMSetRenderTargets( 4, mrt, pDSV );
 
 	float ClearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f }; //red,green,blue,alpha
+	float ClearColorPos[4] = { 0.0f, 0.0f, 0.0f, -1.0f }; //red,green,blue,alpha
 	m_pd3dDeviceContext->ClearRenderTargetView( mrt[0], ClearColor );
 	m_pd3dDeviceContext->ClearRenderTargetView( mrt[1], ClearColor );
 	m_pd3dDeviceContext->ClearRenderTargetView( mrt[2], ClearColor );
-	m_pd3dDeviceContext->ClearRenderTargetView( mrt[3], ClearColor );
+	m_pd3dDeviceContext->ClearRenderTargetView( mrt[3], ClearColorPos );
 
 	m_pd3dDeviceContext->OMSetDepthStencilState(m_GeometryDSState, 1);
 
@@ -978,6 +1039,37 @@ void ELRenderer::ProcessDirectionalLights()
 	m_pd3dDeviceContext->PSSetShaderResources(1, 1, &MRTTexture2DSRV[1]);
 	m_pd3dDeviceContext->PSSetShaderResources(2, 1, &MRTTexture2DSRV[2]);
 	m_pd3dDeviceContext->PSSetShaderResources(3, 1, &MRTTexture2DSRV[3]);
+
+	//set constant buffer////////////////////////////////////////////////////////////
+	ELRenderer_DirectionalLight_PixelShaderVars *shaderVarsMapPtr;
+
+	D3D11_MAPPED_SUBRESOURCE DirLightShaderMappedResource;
+	HRESULT hr = m_pd3dDeviceContext->Map(m_DirLightShaderVarsBufferPixel, 0, D3D11_MAP_WRITE_DISCARD, 0, &DirLightShaderMappedResource); 
+	if(FAILED(hr)) 
+	{ 
+		throw "ProcessDirectionalLights";
+	}
+
+	shaderVarsMapPtr = (ELRenderer_DirectionalLight_PixelShaderVars *)DirLightShaderMappedResource.pData;
+
+	shaderVarsMapPtr->lightcolor[0] = 0.8;
+	shaderVarsMapPtr->lightcolor[1] = 0.8;
+	shaderVarsMapPtr->lightcolor[2] = 0.8;
+	shaderVarsMapPtr->lightcolor[3] = 1;
+
+	shaderVarsMapPtr->lightrdir[0] = -200;
+	shaderVarsMapPtr->lightrdir[1] = 0;
+	shaderVarsMapPtr->lightrdir[2] = -100;
+	shaderVarsMapPtr->lightrdir[3] = 0;
+
+	shaderVarsMapPtr->ViewPosInWorld[0] = 0;
+	shaderVarsMapPtr->ViewPosInWorld[1] = 0;
+	shaderVarsMapPtr->ViewPosInWorld[2] = -70;
+	shaderVarsMapPtr->ViewPosInWorld[3] = 1;
+
+	m_pd3dDeviceContext->PSSetConstantBuffers(0, 1, &m_DirLightShaderVarsBufferPixel);
+	m_pd3dDeviceContext->Unmap(m_DirLightShaderVarsBufferPixel, 0);
+	/////////////////////////////////////////////////////////////////////////////////
 
 	UINT stride = sizeof(float) * 5;
 	UINT offset = 0;

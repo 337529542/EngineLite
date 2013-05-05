@@ -146,9 +146,18 @@ void TestUpdate()
 		for(int j=0; j<4; j++)
 			GeoShaderVars.perspectiveMatrix[i][j] = PerspectiveMatrix.m[i][j];
 
+	ELRenderer_ShaderVars_Geometry_Pixel GeoPixelVars;
+	GeoPixelVars.K_a = 0.0;
+	GeoPixelVars.K_d = 0.8;
+	GeoPixelVars.K_s = 2;
+	GeoPixelVars.Ns = 10;
+
 	renderer->BeginGeometryDebug();
 
 	if(renderer->SetGeometryConstant(&GeoShaderVars) == -1)
+		throw "foo";
+
+	if(renderer->SetGeometryPixelConstant(&GeoPixelVars) == -1)
 		throw "foo";
 
 	renderer->SetGeometryDiffuseTexture2D(tex2D[0]);
